@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# fix full rounds count for sample.txt
-# -> fix end condition: when a fighter finds no target because all enemy are dead
 
 import sys
 
@@ -89,28 +87,41 @@ class Maze:
         if adjacent:
             return []
 
+        enemies = self.goblins if fighter.team == self.ELF else self.elves
+        targets = set()
+        for enemy in enemies:
+            for d in self.DIRECTIONS:
+                pos2 = enemy.pos + d
+                if self.is_valid(pos2) and self.get_cell(pos2) == self.EMPTY:
+                    targets.add(pos2)
+
         me = self.get_cell(fighter.pos)
         q = [fighter.pos]
         links = {}
-        while q:
-            pos = q[0]
-            q = q[1:]
-            for d in self.DIRECTIONS:
-                pos2 = pos + d
-                if not self.is_valid(pos2) or pos2 in links:
-                    continue
+        paths_list = []
+        while q and not paths_list:
+            for _ in range(len(q)):
+                pos = q[0]
+                q = q[1:]
+                for d in self.DIRECTIONS:
+                    pos2 = pos + d
+                    if not self.is_valid(pos2) or pos2 in links:
+                        continue
 
-                if self.get_cell(pos2) == fighter.target:
-                    path = [pos2]
-                    pos2 = pos
-                    while self.get_cell(pos2) != me:
-                        path.append(pos2)
-                        pos2 = links[pos2]
-                    return path
+                    if pos2 in targets:
+                        path = [pos2]
+                        pos2 = pos
+                        while self.get_cell(pos2) != me:
+                            path.append(pos2)
+                            pos2 = links[pos2]
+                        paths_list.append(path)
+                        continue
 
-                if self.get_cell(pos2) == self.EMPTY:
-                    links[pos2] = pos
-                    q.append(pos2)
+                    if self.get_cell(pos2) == self.EMPTY:
+                        links[pos2] = pos
+                        q.append(pos2)
+
+        return min(paths_list, key=lambda p: (p[0].y, p[0].x)) if paths_list else None
 
     def move_toward(self, fighter, path_from_enemy):
         self.clear_fighter(fighter)
@@ -214,6 +225,6 @@ if __name__ == '__main__':
     maze = Maze(sys.stdin.readlines())
     combat = Combat(maze)
     while not combat.play_round():
-        maze.display()
+        pass
 
     combat.print_outcome()
