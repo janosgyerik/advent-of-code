@@ -1,5 +1,8 @@
 # Python
 *.pyc
 
+# IDEA
+.idea
+
 # advent of code
 input.txt
