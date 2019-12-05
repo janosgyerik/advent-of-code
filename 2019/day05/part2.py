@@ -10,6 +10,10 @@ class Machine:
             2: lambda: self.bi_func(lambda x, y: x * y),
             3: lambda: self.input(),
             4: lambda: self.output(),
+            5: lambda: self.jump_if_true(),
+            6: lambda: self.jump_if_false(),
+            7: lambda: self.less_than(),
+            8: lambda: self.equals(),
             99: lambda: self.stop(),
         }
         self.backup = memory
@@ -57,12 +61,39 @@ class Machine:
         self.set(self.argi(3), fun(s1, s2))
         self.ip += 4
 
+    def jump_if_true(self):
+        if self.arg(1):
+            self.ip = self.arg(2)
+        else:
+            self.ip += 3
+
+    def jump_if_false(self):
+        if not self.arg(1):
+            self.ip = self.arg(2)
+        else:
+            self.ip += 3
+
+    def less_than(self):
+        if self.arg(1) < self.arg(2):
+            v = 1
+        else:
+            v = 0
+        self.set(self.argi(3), v)
+        self.ip += 4
+
+    def equals(self):
+        if self.arg(1) == self.arg(2):
+            v = 1
+        else:
+            v = 0
+        self.set(self.argi(3), v)
+        self.ip += 4
+
     def execute(self, in1):
         self.in1 = in1
         while not self.terminate:
             opcode = self.get() % 100
             self.funs[opcode]()
-            assert self.out1 == 0 or len(self.outputs) > 1 and all(map(lambda x: x == 0, self.outputs[:-1]))
 
 
 def ints(line):
@@ -71,7 +102,7 @@ def ints(line):
 
 def main():
     m = Machine(ints(sys.stdin.readlines()[0]))
-    m.execute(1)
+    m.execute(5)
     print(m.out1)
 
 
