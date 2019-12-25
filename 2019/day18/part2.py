@@ -29,12 +29,48 @@ class Maze:
     def pos(self, name):
         return self.name_to_pos[name]
 
+    def keys(self):
+        return [c for c in self.name_to_pos if c.islower()]
+
     def min_steps_to_collect_all_keys(self):
+        x, y = orig = self.pos('@')
+
+        self.remove(orig)
+        for dx, dy in [[0, 1], [0, -1], [1, 0], [-1, 0]]:
+            self.remove((x + dx, y + dy))
+
+        keys_in_quadrant = defaultdict(set)
+        for key in self.keys():
+            kx, ky = self.pos(key)
+            if kx < x and ky < y:
+                keys_in_quadrant[(-1, -1)].add(key)
+            elif kx < x and ky > y:
+                keys_in_quadrant[(-1, 1)].add(key)
+            elif kx > x and ky < y:
+                keys_in_quadrant[(1, -1)].add(key)
+            elif kx > x and ky > y:
+                keys_in_quadrant[(1, 1)].add(key)
+
+        total = 0
+        for dx, dy in keys_in_quadrant:
+            start = x + dx, y + dy
+            keys = keys_in_quadrant[(dx, dy)]
+            total += self.min_steps_to_collect_keys(start, keys)
+
+        return total
+
+    def min_steps_to_collect_keys(self, start, key_names):
         def add_key(store, key):
             if not ('a' <= key <= 'z'):
                 raise ValueError(f'key must be a lowercase letter, got "{key}"')
 
             return store | (1 << (ord(key) - ord('a')))
+
+        def remove_key(store, key):
+            if not ('a' <= key <= 'z'):
+                raise ValueError(f'key must be a lowercase letter, got "{key}"')
+
+            return store & ~(1 << (ord(key) - ord('a')))
 
         def can_open(store, lock):
             if not ('A' <= lock <= 'Z'):
@@ -49,40 +85,35 @@ class Maze:
         def is_lock(c):
             return 'A' <= c <= 'Z'
 
-        all_keys = 2 ** len([name for name in self.name_to_pos.keys() if name.islower()]) - 1
-        pos = self.pos('@')
+        all_keys = 2 ** len([key for key in self.keys()]) - 1
+        keys = all_keys
+        for key in key_names:
+            keys = remove_key(keys, key)
 
-        self.remove(pos)
-        for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-            pos2 = pos[0]+dx, pos[1]+dy
-            self.remove(pos2)
-
-        heads = tuple((pos[0]+dx, pos[1]+dy) for dx, dy in [(1, 1), (-1, -1), (1, -1), (-1, 1)])
-        seen = {(heads, 0)}
-        q = [(heads, 0, 0)]
+        pos = start
+        seen = {(pos, keys)}
+        q = [(pos, keys, 0)]
         while q:
-            heads, keys, d = q.pop(0)
+            pos, keys, d = q.pop(0)
 
-            for i, pos in enumerate(heads):
-                for pos2 in self.neighbors[pos]:
-                    heads2 = tuple(pos2 if j == i else heads[j] for j in range(len(heads)))
-                    if (heads2, keys) in seen:
-                        continue
+            for pos2 in self.neighbors[pos]:
+                if (pos2, keys) in seen:
+                    continue
 
-                    seen.add((heads2, keys))
-                    name2 = self.grid[pos2]
-                    if is_lock(name2) and not can_open(keys, name2):
-                        continue
+                seen.add((pos2, keys))
+                name2 = self.grid[pos2]
+                if is_lock(name2) and not can_open(keys, name2):
+                    continue
 
-                    if is_key(name2):
-                        keys2 = add_key(keys, name2)
-                        if keys2 == all_keys:
-                            return d + 1
+                if is_key(name2):
+                    keys2 = add_key(keys, name2)
+                    if keys2 == all_keys:
+                        return d + 1
 
-                        q.append((heads2, keys2, d + 1))
+                    q.append((pos2, keys2, d + 1))
 
-                    else:
-                        q.append((heads2, keys, d + 1))
+                else:
+                    q.append((pos2, keys, d + 1))
 
 
 def create_maze(lines):
