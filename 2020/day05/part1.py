@@ -24,13 +24,21 @@ def to_seat_id(p):
     return num
 
 
-def seat_ids(bpasses):
-    return map(to_seat_id, bpasses)
+def compute_seat_ids(passes):
+    return map(to_seat_id, passes)
+
+
+def find_missing(nums):
+    for i in range(1, len(nums)):
+        if nums[i-1] + 1 < nums[i]:
+            return nums[i] - 1
 
 
 def main():
     passes = read_passes()
-    print(max(seat_ids(passes)))
+    seat_ids = list(compute_seat_ids(passes))
+    print(max(seat_ids))
+    print(find_missing(sorted(seat_ids)))
 
 
 if __name__ == '__main__':
