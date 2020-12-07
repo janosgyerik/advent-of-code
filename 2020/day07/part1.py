@@ -42,6 +42,10 @@ def find_unique_nodes(tree, root):
     return unique_nodes
 
 
+def count_bags(rules, color):
+    return 1 + sum(count * count_bags(rules, color2) for color2, count in rules[color].items())
+
+
 def main():
     lines = [line.strip() for line in sys.stdin.readlines()]
     rules = parse(lines)
@@ -50,6 +54,8 @@ def main():
     # print(rgraph)
     leafs = find_unique_nodes(rgraph, 'shiny gold')
     print(len(leafs) - 1)
+
+    print(count_bags(rules, 'shiny gold') - 1)
 
 
 if __name__ == '__main__':
