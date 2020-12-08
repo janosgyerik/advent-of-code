@@ -21,6 +21,7 @@ class Machine:
         return [Instruction(self.funs[x.fun], x.arg) for x in instructions]
 
     def reset(self):
+        self.ip = 0
         self.accumulator = 0
 
     def nop(self, arg):
@@ -36,9 +37,13 @@ class Machine:
     def execute(self):
         used = set()
         while self.ip not in used:
+            if self.ip >= len(self.instructions):
+                return True
             used.add(self.ip)
             inst = self.instructions[self.ip]
             inst.fun(inst.arg)
+
+        return False
 
 
 def ints(line):
@@ -66,6 +71,18 @@ def main():
     m = machine_from_lines(start, lines)
     m.execute()
     print(m.accumulator)
+
+    for index, line in enumerate(lines):
+        if line.startswith('nop') or line.startswith('jmp'):
+            orig = m.instructions[index]
+            rfun = 'nop' if line.startswith('jmp') else 'jmp'
+            fix = Instruction(m.funs[rfun], orig.arg)
+            m.instructions[index] = fix
+            m.reset()
+            if m.execute():
+                print(m.accumulator)
+                break
+            m.instructions[index] = orig
 
 
 if __name__ == '__main__':
