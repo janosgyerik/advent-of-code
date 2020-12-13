@@ -28,20 +28,15 @@ def find_next_bus(buses, arrival):
 
 def find_contest_timestamp(schedule):
     buses = [(int(x), offset) for offset, x in enumerate(schedule) if x != 'x']
-    buses = sorted(buses, key=lambda x: -x[0])
-    first = buses[0][0]
-    candidate = first - buses[0][1]
+    # buses = sorted(buses, key=lambda x: -x[0])
+    candidate = 0
+    increment = 1
+    for bus, offset in buses:
+        while (candidate + offset) % bus != 0:
+            candidate += increment
+        increment *= bus
 
-    increment = first
-    while True:
-        for bus, offset in buses:
-            if (candidate + offset) % bus != 0:
-                candidate += increment
-                break
-            elif increment % bus != 0:
-                increment *= bus
-        else:
-            return candidate
+    return candidate
 
 
 def main():
