@@ -43,6 +43,7 @@ def main():
     lines = read_lines(sys.argv[1])
     nums = [int(x) for x in lines[0].split(',')]
     print(part1(nums, 2020))
+    print(part1(nums, 30000000))
 
 
 if __name__ == '__main__':
