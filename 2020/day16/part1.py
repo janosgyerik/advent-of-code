@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from collections import namedtuple, Counter, deque, defaultdict
-from itertools import product
-from heapq import heappush, heappop, heapify
-from functools import lru_cache
+from functools import reduce
 
 
 def read_lines(path):
@@ -28,7 +25,7 @@ def build_specs(lines):
 
         name, rest = line.split(': ')
         r1, _, r2 = rest.split(' ')
-        fields[name[:-1]] = make_interval(r1), make_interval(r2)
+        fields[name] = make_interval(r1), make_interval(r2)
         index += 1
 
     mine = [int(x) for x in lines[index+2].split(',')]
@@ -65,11 +62,65 @@ def find_completely_invalid(fields, others):
     return invalid
 
 
+def is_possibly_valid(intervals, ticket):
+    for v in ticket:
+        if not within_any_interval(intervals, v):
+            return False
+
+    return True
+
+
+def is_possible_index(tickets, index, intervals):
+    for ticket in tickets:
+        for start, end in intervals:
+            if start <= ticket[index] <= end:
+                break
+        else:
+            return False
+
+    return True
+
+
+def find_mapping(fields, mine, others):
+    intervals = build_intervals(fields)
+    tickets = [mine] + [ticket for ticket in others if is_possibly_valid(intervals, ticket)]
+
+    positions = set(range(len(mine)))
+    candidates = {name: positions.copy() for name in fields.keys()}
+    mapping = {}
+    while candidates:
+        candidates2 = {name: set() for name in candidates.keys()}
+        for name, indexes in candidates.items():
+            for index in indexes:
+                if is_possible_index(tickets, index, fields[name]):
+                    candidates2[name].add(index)
+
+        candidates3 = {}
+        for name, indexes in candidates2.items():
+            if len(indexes) == 1:
+                pos = list(indexes)[0]
+                mapping[name] = pos
+                positions.remove(pos)
+            else:
+                candidates3[name] = indexes
+
+        candidates = {name: {pos for pos in indexes if pos in positions}
+                      for name, indexes in candidates3.items()}
+
+    return mapping
+
+
 def main():
     lines = read_lines(sys.argv[1])
     fields, mine, others = build_specs(lines)
     completely_invalid = find_completely_invalid(fields, others)
     print(sum(completely_invalid))
+
+    mapping = find_mapping(fields, mine, others)
+    departure_positions = [index for name, index in mapping.items() if name.startswith('depart')]
+    departure_values = [mine[index] for index in departure_positions]
+    product = reduce(lambda a, b: a * b, departure_values, 1)
+    print(product)
 
 
 if __name__ == '__main__':
