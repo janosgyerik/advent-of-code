@@ -76,6 +76,7 @@ def find_safe_ingredients(foods):
     assert len(known_allergens) == len(mapped_allergens)
     assert all(len(f.allergens) == 0 for f in foods)
 
+    print(','.join(sorted(mapped_allergens.keys(), key=lambda k: mapped_allergens[k])))
     return sum(len(f.ingredients) for f in foods)
 
 
