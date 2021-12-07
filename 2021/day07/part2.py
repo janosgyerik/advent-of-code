@@ -25,14 +25,19 @@ def compute_cost(crabs, pos):
 
 
 def min_fuel(crabs):
-    unique_crabs = sorted(set(crabs))
-    min_cost = compute_cost(crabs, unique_crabs[0])
-    for pos in range(unique_crabs[0], unique_crabs[-1]):
-        cost = compute_cost(crabs, pos)
-        if min_cost < cost:
-            return min_cost
+    def derivative(p):
+        return compute_cost(crabs, p) - compute_cost(crabs, p - 1)
 
-        min_cost = cost
+    left = min(crabs)
+    right = max(crabs)
+    while left < right:
+        mid = left + (right - left) // 2
+        if derivative(left) * derivative(mid) < 0:
+            right = mid
+        else:
+            left = mid + 1
+
+    return compute_cost(crabs, left - 1)
 
 
 def solve(lines):
