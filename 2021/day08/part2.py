@@ -16,16 +16,6 @@ def lines_to_ints(lines):
     return [int(x) for x in lines[0].split(',')]
 
 
-possibles_by_length = {
-    2: (1, ),
-    3: (7, ),
-    4: (4, ),
-    5: (2, 3, 5),
-    6: (0, 6, 9),
-    7: (8, ),
-}
-
-
 def normalized(segments):
     return set(segments)
 
@@ -43,7 +33,7 @@ class Entry:
         return sum(1 for x in self.outputs if len(x) in targets)
 
     def decode(self):
-        '''
+        """
   0:      1:      2:      3:      4:
  aaaa    ....    aaaa    aaaa    ....
 b    c  .    c  .    c  .    c  b    c
@@ -71,10 +61,10 @@ b    .  b    .  .    c  b    c  b    c
 
         how to distinguish:
         9: must contain all segments of 4
-        0: must not contain all segments of 4 and contain all segments of 7
+        0: else must contain all segments of 7
         6: else
 
-        '''
+        """
         mapping = self.compute_mapping(self.inputs)
         return self.compute_output(mapping, self.outputs)
 
@@ -100,10 +90,10 @@ b    .  b    .  .    c  b    c  b    c
         for segment in segments_by_length[5]:
             if contains_all(segment, mapping[1]):
                 mapping[3] = segment
-            elif contains_two(segment, mapping[4]):
-                mapping[2] = segment
-            else:
+            elif contains_all(mapping[6], segment):
                 mapping[5] = segment
+            else:
+                mapping[2] = segment
 
         return mapping
 
@@ -121,21 +111,8 @@ def map_to_digit(segments, mapping):
             return digit
 
 
-def contains_all(segment, other):
-    for x in other:
-        if x not in segment:
-            return False
-
-    return True
-
-
-def contains_two(segment, other):
-    count = 0
-    for x in other:
-        if x in segment:
-            count += 1
-
-    return count == 2
+def contains_all(bigger, smaller):
+    return all(x in bigger for x in smaller)
 
 
 def parse_entries(lines):
