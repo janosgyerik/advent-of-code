@@ -21,7 +21,7 @@ class Grid:
 
     def total_basin_risk(self):
         basins = sorted(self.basins(), reverse=True)
-        return basins[0] * basins[1] * basins[2]
+        return functools.reduce(lambda x, y: x * y, basins[0:3], 1)
 
     def basins(self):
         for r, row in enumerate(self.grid):
