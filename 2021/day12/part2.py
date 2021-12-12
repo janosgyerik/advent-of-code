@@ -27,14 +27,10 @@ def lines_of_digits_to_grid(lines):
 class Graph:
     def __init__(self):
         self.adj = defaultdict(set)
-        self.count = 0
 
     def connect(self, u, v):
         self.adj[u].add(v)
         self.adj[v].add(u)
-
-    def print(self):
-        print()
 
     def can_re_visit(self, x):
         return x.isupper()
@@ -43,26 +39,26 @@ class Graph:
         return x.islower() and x not in {'start', 'end'}
 
     def count_paths_from_start_to_end(self):
-        self.count = 0
-        self.count_paths('start', 'end', set(), set())
-        return self.count
+        return self.count_paths('start', 'end', set(), None)
 
     def count_paths(self, start, end, visited, visited_twice):
         if start == end:
-            self.count += 1
-            return
+            return 1
 
-        visited_twice = visited_twice.copy()
         if start in visited and self.can_re_visit_once(start):
-            visited_twice.add(start)
+            visited_twice = start
 
         visited = visited.copy()
         visited.add(start)
+
+        count = 0
         for v in self.adj[start]:
             if (v not in visited
                     or self.can_re_visit(v)
-                    or not visited_twice and self.can_re_visit_once(v)):
-                self.count_paths(v, end, visited, visited_twice)
+                    or visited_twice is None and self.can_re_visit_once(v)):
+                count += self.count_paths(v, end, visited, visited_twice)
+
+        return count
 
 
 def parse_graph(lines):
