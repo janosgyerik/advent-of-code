@@ -39,14 +39,14 @@ class Graph:
         return x.islower() and x not in {'start', 'end'}
 
     def count_paths_from_start_to_end(self):
-        return self.count_paths('start', 'end', set(), None)
+        return self.count_paths('start', 'end', set(), False)
 
     def count_paths(self, start, end, visited, visited_twice):
         if start == end:
             return 1
 
         if start in visited and self.can_re_visit_once(start):
-            visited_twice = start
+            visited_twice = True
 
         start_was_in_visited = start in visited
         visited.add(start)
@@ -55,7 +55,7 @@ class Graph:
         for v in self.adj[start]:
             if (v not in visited
                     or self.can_re_visit(v)
-                    or visited_twice is None and self.can_re_visit_once(v)):
+                    or not visited_twice and self.can_re_visit_once(v)):
                 count += self.count_paths(v, end, visited, visited_twice)
 
         if not start_was_in_visited:
