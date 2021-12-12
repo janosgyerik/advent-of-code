@@ -48,7 +48,7 @@ class Graph:
         if start in visited and self.can_re_visit_once(start):
             visited_twice = start
 
-        visited = visited.copy()
+        start_was_in_visited = start in visited
         visited.add(start)
 
         count = 0
@@ -57,6 +57,9 @@ class Graph:
                     or self.can_re_visit(v)
                     or visited_twice is None and self.can_re_visit_once(v)):
                 count += self.count_paths(v, end, visited, visited_twice)
+
+        if not start_was_in_visited:
+            visited.remove(start)
 
         return count
 
