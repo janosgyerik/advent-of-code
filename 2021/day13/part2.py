@@ -63,33 +63,25 @@ class Paper:
     def __init__(self, dots):
         self.dots = sorted(dots)
 
-    def fold_up(self, along):
+    def _fold(self, along, get_axis, create_new_dot):
         new_dots = set()
-        n = max(y for x, y in self.dots)
+        n = max(get_axis(dot) for dot in self.dots)
         n += 1 - n % 2
 
         for dot in self.dots:
-            x, y = dot
-            if y < along:
+            axis = get_axis(dot)
+            if get_axis(dot) < along:
                 new_dots.add(dot)
             else:
-                new_dots.add((x, n - y - 1))
+                new_dots.add(create_new_dot(dot, n - axis - 1))
 
         self.dots = sorted(list(new_dots))
+
+    def fold_up(self, along):
+        self._fold(along, lambda dot: dot[1], lambda dot, axis: (dot[0], axis))
 
     def fold_left(self, along):
-        new_dots = set()
-        n = max(x for x, y in self.dots)
-        n += 1 - n % 2
-
-        for dot in self.dots:
-            x, y = dot
-            if x < along:
-                new_dots.add(dot)
-            else:
-                new_dots.add((n - x - 1, y))
-
-        self.dots = sorted(list(new_dots))
+        self._fold(along, lambda dot: dot[0], lambda dot, axis: (axis, dot[1]))
 
     def count_dots(self):
         return len(self.dots)
