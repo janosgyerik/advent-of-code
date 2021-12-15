@@ -77,9 +77,14 @@ def solve(lines):
     grid = Grid(utils.strings_of_digits_to_grid_of_ints(lines))
     grid.multiply()
 
+    def weight_getter(source, target):
+        r, c = target
+        return grid.grid[r][c]
+
     graph = create_graph(grid.grid)
-    size = len(grid.grid)
-    return graph.cheapest_path((0, 0), (size - 1, size - 1), weights=grid.grid)
+    last = len(grid.grid) - 1
+
+    return graph.cheapest_path((0, 0), (last, last), weight_getter=weight_getter)
 
 
 def main():

@@ -6,7 +6,8 @@ from collections import namedtuple, Counter, deque, defaultdict
 from itertools import product
 from heapq import heappush, heappop, heapify
 from functools import lru_cache
-
+from numbers import Number
+from typing import Callable, Any
 
 hvd_neighbors = ((-1, 1), (-1, 0), (-1, -1), (0, 1), (0, -1), (1, 1), (1, 0), (1, -1))
 hv_neighbors = ((0, 1), (1, 0), (0, -1), (-1, 0))
@@ -96,7 +97,7 @@ class Graph:
     def print(self):
         print()
 
-    def cheapest_path(self, start, end, weights=None):
+    def cheapest_path(self, start, end, weight_getter: Callable[[Any, Any], Number]):
         pq = PriorityQueue()
 
         dist = {}
@@ -121,7 +122,7 @@ class Graph:
                 if v in done:
                     continue
 
-                alt = dist[u] + weights[v[0]][v[1]]
+                alt = dist[u] + weight_getter(u, v)
                 if alt < dist[v]:
                     dist[v] = alt
                     pq.add_or_update(v, alt)
