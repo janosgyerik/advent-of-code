@@ -10,14 +10,6 @@ from typing import List
 import utils
 
 
-class Foo:
-    def __init__(self):
-        pass
-
-    def print(self):
-        print('todo: print')
-
-
 class Grid:
     def __init__(self, grid):
         self.grid = grid

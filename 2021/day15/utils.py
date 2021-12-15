@@ -131,3 +131,16 @@ def dijkstra(graph, start, end, weight_getter: Callable[[Any, Any], Number]):
 
     return dist[end]
 
+
+class MatrixBuilder:
+    def __init__(self, matrix):
+        self.matrix = matrix
+
+    def paste_right(self, other):
+        pass
+
+    def paste_down(self, other):
+        pass
+
+    def update(self, updater):
+        pass
