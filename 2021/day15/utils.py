@@ -46,6 +46,45 @@ def delimited_strings_to_lists(strings, delim=None):
     return [delimited_string_to_list(s, delim) for s in strings]
 
 
+# Heavily inspired by https://docs.python.org/3/library/heapq.html#priority-queue-implementation-notes
+class PriorityQueue:
+    def __init__(self):
+        self._pq = []
+
+        # mapping to entries for fast lookup of objects in the queue
+        self._items = {}
+
+        # unique object used as a marker
+        self._REMOVED = object()
+
+        # unique sequence count to order items by insertion time
+        self._counter = itertools.count()
+
+    def add_or_update(self, item, priority=0):
+        """Add a new item or update the priority of an existing item"""
+        if item in self._items:
+            self.remove(item)
+        count = next(self._counter)
+        entry = [priority, count, item]
+        self._items[item] = entry
+        heappush(self._pq, entry)
+
+    def remove(self, item):
+        """Mark an existing item as REMOVED. Raise KeyError if not found."""
+        entry = self._items.pop(item)
+        entry[-1] = self._REMOVED
+
+    def pop(self):
+        """Remove and return the lowest priority item. Raise KeyError if empty."""
+        while self._pq:
+            priority, count, item = heappop(self._pq)
+            if item is not self._REMOVED:
+                del self._items[item]
+                return item
+
+        raise KeyError('pop from an empty priority queue')
+
+
 class Graph:
     def __init__(self):
         self.adj = defaultdict(set)
@@ -58,75 +97,21 @@ class Graph:
         print()
 
     def cheapest_path(self, start, end, weights=None):
-        dist = {}
-        q = set()
-        for v in self.adj:
-            q.add(v)
-            if v == start:
-                dist[v] = 0
-            else:
-                dist[v] = float('inf')
-
-        while q:
-            print(len(q))
-            u = min(q, key=lambda x: dist[x])
-            if u == end:
-                break
-
-            q.remove(u)
-
-            for v in self.adj[u]:
-                if v not in q:
-                    continue
-
-                alt = dist[u] + weights[v[0]][v[1]]
-                if alt < dist[v]:
-                    dist[v] = alt
-
-        return dist[end]
-
-    def cheapest_path2(self, start, end, weights=None):
-        pq = []  # list of entries arranged in a heap
-        entry_finder = {}  # mapping of tasks to entries
-        REMOVED = '<removed-task>'  # placeholder for a removed task
-        counter = itertools.count()  # unique sequence count
-
-        def add_task(task, priority=0):
-            'Add a new task or update the priority of an existing task'
-            if task in entry_finder:
-                remove_task(task)
-            count = next(counter)
-            entry = [priority, count, task]
-            entry_finder[task] = entry
-            heappush(pq, entry)
-
-        def remove_task(task):
-            'Mark an existing task as REMOVED.  Raise KeyError if not found.'
-            entry = entry_finder.pop(task)
-            entry[-1] = REMOVED
-
-        def pop_task():
-            'Remove and return the lowest priority task. Raise KeyError if empty.'
-            while pq:
-                priority, count, task = heappop(pq)
-                if task is not REMOVED:
-                    del entry_finder[task]
-                    return task
-            raise KeyError('pop from an empty priority queue')
+        pq = PriorityQueue()
 
         dist = {}
         for v in self.adj:
             if v == start:
-                add_task(v, 0)
+                pq.add_or_update(v, 0)
                 dist[v] = 0
             else:
-                add_task(v, float('inf'))
+                pq.add_or_update(v, float('inf'))
                 dist[v] = float('inf')
 
         done = set()
 
         while pq:
-            u = pop_task()
+            u = pq.pop()
             if u == end:
                 break
 
@@ -139,7 +124,7 @@ class Graph:
                 alt = dist[u] + weights[v[0]][v[1]]
                 if alt < dist[v]:
                     dist[v] = alt
-                    add_task(v, alt)
+                    pq.add_or_update(v, alt)
 
         return dist[end]
 

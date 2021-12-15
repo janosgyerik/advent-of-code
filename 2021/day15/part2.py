@@ -74,14 +74,12 @@ def create_graph(grid):
 
 
 def solve(lines):
-    # import sys
-    # sys.setrecursionlimit(1500)
     grid = Grid(utils.strings_of_digits_to_grid_of_ints(lines))
     grid.multiply()
 
     graph = create_graph(grid.grid)
     size = len(grid.grid)
-    return graph.cheapest_path2((0, 0), (size - 1, size - 1), weights=grid.grid)
+    return graph.cheapest_path((0, 0), (size - 1, size - 1), weights=grid.grid)
 
 
 def main():
