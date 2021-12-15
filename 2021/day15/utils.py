@@ -61,7 +61,7 @@ class PriorityQueue:
         # unique sequence count to order items by insertion time
         self._counter = itertools.count()
 
-    def add_or_update(self, item, priority=0):
+    def add_or_update(self, item, priority: Number = 0):
         """Add a new item or update the priority of an existing item"""
         if item in self._items:
             self.remove(item)
@@ -97,35 +97,37 @@ class Graph:
     def print(self):
         print()
 
-    def cheapest_path(self, start, end, weight_getter: Callable[[Any, Any], Number]):
-        pq = PriorityQueue()
 
-        dist = {}
-        for v in self.adj:
-            if v == start:
-                pq.add_or_update(v, 0)
-                dist[v] = 0
-            else:
-                pq.add_or_update(v, float('inf'))
-                dist[v] = float('inf')
+def dijkstra(graph, start, end, weight_getter: Callable[[Any, Any], Number]):
+    infinity = float('inf')
 
-        done = set()
+    pq = PriorityQueue()
+    dist = {}
 
-        while pq:
-            u = pq.pop()
-            if u == end:
-                break
+    for v in graph.adj:
+        pq.add_or_update(v, infinity)
+        dist[v] = infinity
 
-            done.add(u)
+    pq.add_or_update(start, 0)
+    dist[start] = 0
 
-            for v in self.adj[u]:
-                if v in done:
-                    continue
+    done = set()
 
-                alt = dist[u] + weight_getter(u, v)
-                if alt < dist[v]:
-                    dist[v] = alt
-                    pq.add_or_update(v, alt)
+    while pq:
+        u = pq.pop()
+        if u == end:
+            break
 
-        return dist[end]
+        done.add(u)
+
+        for v in graph.adj[u]:
+            if v in done:
+                continue
+
+            alt = dist[u] + weight_getter(u, v)
+            if alt < dist[v]:
+                dist[v] = alt
+                pq.add_or_update(v, alt)
+
+    return dist[end]
 

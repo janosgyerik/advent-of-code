@@ -84,7 +84,7 @@ def solve(lines):
     graph = create_graph(grid.grid)
     last = len(grid.grid) - 1
 
-    return graph.cheapest_path((0, 0), (last, last), weight_getter=weight_getter)
+    return utils.dijkstra(graph, (0, 0), (last, last), weight_getter=weight_getter)
 
 
 def main():
