@@ -10,47 +10,27 @@ from typing import List
 import utils
 
 
-class Grid:
-    def __init__(self, grid):
-        self.grid = grid
-        self.size = len(grid)
+def new_value(value, offset):
+    value += offset
+    if value >= 10:
+        value -= 9
+    return value
 
-    def print(self):
-        for row in self.grid:
-            print(''.join(str(x) for x in row))
 
-    def new_value(self, value, offset):
-        value += offset
-        if value >= 10:
-            value -= 9
-        return value
+def reshape(base):
+    dim = len(base)
+    new_dim = dim * 5
 
-    def add_to_right(self, offset):
-        for index in range(self.size):
-            row = self.grid[index][:self.size]
-            self.grid[index].extend(row)
+    grid = [[0] * new_dim for _ in range(new_dim)]
 
-            for index2 in range(self.size):
-                base = len(self.grid[index]) - self.size
-                value = self.new_value(row[index2], offset)
-                self.grid[index][base + index2] = value
+    for r in range(new_dim):
+        for c in range(new_dim):
+            r0 = r % dim
+            c0 = c % dim
+            offset = r // dim + c // dim
+            grid[r][c] = new_value(base[r0][c0], offset)
 
-    def add_to_bottom(self, offset):
-        base_row_index = len(self.grid)
-
-        for index in range(self.size):
-            row = self.grid[index]
-            self.grid.append(row[:])
-
-            for index2, value in enumerate(row):
-                self.grid[base_row_index + index][index2] = self.new_value(value, offset)
-
-    def multiply(self):
-        for offset in range(4):
-            self.add_to_right(offset + 1)
-
-        for offset in range(4):
-            self.add_to_bottom(offset + 1)
+    return grid
 
 
 def create_graph(grid):
@@ -66,15 +46,15 @@ def create_graph(grid):
 
 
 def solve(lines):
-    grid = Grid(utils.strings_of_digits_to_grid_of_ints(lines))
-    grid.multiply()
+    grid = utils.strings_of_digits_to_grid_of_ints(lines)
+    grid = reshape(grid)
 
     def weight_getter(source, target):
         r, c = target
-        return grid.grid[r][c]
+        return grid[r][c]
 
-    graph = create_graph(grid.grid)
-    last = len(grid.grid) - 1
+    graph = create_graph(grid)
+    last = len(grid) - 1
 
     return utils.dijkstra(graph, (0, 0), (last, last), weight_getter=weight_getter)
 
