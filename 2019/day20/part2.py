@@ -35,8 +35,12 @@ class Maze:
         self.neighbors[other].add(pos)
 
     def shortest_path(self, start, end):
+        def is_outer(pos):
+            return pos[0] <= 3 or pos[1] <= 3 or pos[0] >= self.max_x - 3 or pos[1] >= self.max_y - 3
+
         def is_wall(pos, level):
-            return level and self.portal_pos_to_name.get(pos) in ('AA', 'ZZ')
+            return (level and self.portal_pos_to_name.get(pos) in ('AA', 'ZZ')
+                    or level == 0 and pos in self.portal_pos_to_name and is_outer(pos))
 
         def compute_level(pos, level):
             if pos not in self.portal_pos_to_name:
@@ -47,14 +51,30 @@ class Maze:
 
             return level + self.get_level_offset(pos)
 
+        path = {(start, 0): None}
+
+        def print_path():
+            p = (end, 0)
+            steps = [p]
+            while True:
+                p = path[p]
+                if p is None:
+                    break
+                steps.append(p)
+            for p in reversed(steps):
+                print(p[0][1], p[0][0], p[1])
+
         q = [(start, 0, 0)]
-        visited = set()
+        visited = {(start, 0)}
+        # for pos, name in sorted(self.portal_pos_to_name.items()):
+        #     print(f"{pos}: {name}")
         while q:
             pos, level, d = q.pop(0)
+            # print(pos, level, d)
+            print(d)
             if pos == end:
+                print_path()
                 return d
-
-            visited.add((pos, level))
 
             for pos2 in self.neighbors[pos]:
                 if is_wall(pos2, level):
@@ -62,7 +82,9 @@ class Maze:
 
                 level2 = compute_level(pos, level)
                 if (pos2, level2) not in visited:
-                    q.append((pos2, level2, d+1))
+                    visited.add((pos2, level2))
+                    q.append((pos2, level2, d + 1))
+                    path[pos2, level2] = (pos, level)
 
 
 def create_maze(lines):
@@ -74,19 +96,19 @@ def create_maze(lines):
             if lines[y][x] == '.':
                 pos = x, y
                 for dx, dy in directions:
-                    pos2 = x2, y2 = x+dx, y+dy
+                    pos2 = x2, y2 = x + dx, y + dy
                     c = lines[y2][x2]
                     if c.isupper() or c == '.':
                         maze.connect(pos, pos2)
                         if c.isupper():
-                            if lines[y2][x2+1].isupper():
-                                name = c + lines[y2][x2+1]
-                            elif lines[y2][x2-1].isupper():
-                                name = lines[y2][x2-1] + c
-                            elif lines[y2+1][x2].isupper():
-                                name = c + lines[y2+1][x2]
-                            elif lines[y2-1][x2].isupper():
-                                name = lines[y2-1][x2] + c
+                            if lines[y2][x2 + 1].isupper():
+                                name = c + lines[y2][x2 + 1]
+                            elif lines[y2][x2 - 1].isupper():
+                                name = lines[y2][x2 - 1] + c
+                            elif lines[y2 + 1][x2].isupper():
+                                name = c + lines[y2 + 1][x2]
+                            elif lines[y2 - 1][x2].isupper():
+                                name = lines[y2 - 1][x2] + c
                             else:
                                 raise ValueError('expected an uppercase neighbor')
 

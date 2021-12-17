@@ -93,7 +93,7 @@ def find_mapping(fields, mine, others):
         for name, indexes in candidates.items():
             for index in indexes:
                 if is_possible_index(tickets, index, fields[name]):
-                    candidates2[name].add(index)
+                    candidates2[name].add_or_update(index)
 
         candidates3 = {}
         for name, indexes in candidates2.items():
