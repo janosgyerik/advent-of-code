@@ -69,6 +69,9 @@ class ToExplodeFinderVisitor(utils.Visitor):
         if node.val is not None:
             return []
 
+        if node is self.to_explode:
+            return []
+
         return [node.left, node.right]
 
     def pre_visit(self, node):
@@ -83,7 +86,7 @@ class ToExplodeFinderVisitor(utils.Visitor):
 
             return
 
-        if node.val is not None and node.parent is not self.to_explode:
+        if node.val is not None:
             if self.to_explode is not None:
                 self.right = node
                 return
