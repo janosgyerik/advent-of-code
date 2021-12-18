@@ -162,7 +162,9 @@ class SnailFish:
         while True:
             left, to_explode, right = find_to_explode(self)
 
-            if to_explode is None:
+            if to_explode is not None:
+                explode(left, to_explode, right)
+            else:
                 to_split = find_to_split(self)
                 if not to_split:
                     break
@@ -182,19 +184,21 @@ class SnailFish:
 
                 continue
 
-            if left:
-                left.val += to_explode.left.val
 
-            if right:
-                right.val += to_explode.right.val
+def explode(left, to_explode, right):
+    if left:
+        left.val += to_explode.left.val
 
-            parent = to_explode.parent
-            sf = SnailFish(0)
-            sf.parent = parent
-            if parent.left is to_explode:
-                parent.left = sf
-            else:
-                parent.right = sf
+    if right:
+        right.val += to_explode.right.val
+
+    parent = to_explode.parent
+    sf = SnailFish(0)
+    sf.parent = parent
+    if parent.left is to_explode:
+        parent.left = sf
+    else:
+        parent.right = sf
 
 
 def compute_sum(nums):
