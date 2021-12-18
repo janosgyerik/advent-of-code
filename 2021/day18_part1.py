@@ -64,6 +64,7 @@ class ToExplodeFinderVisitor(utils.Visitor):
         self.left = None
         self.right = None
         self.height = 0
+        self.result = [None, None, None]
 
     def get_children(self, node):
         if node.val is not None:
@@ -79,13 +80,13 @@ class ToExplodeFinderVisitor(utils.Visitor):
 
         if self.height == 5 and node.val is None:
             if self.to_explode is None:
-                self.left = self.prev
-                self.to_explode = node
+                self.left = self.result[0] = self.prev
+                self.to_explode = self.result[1] = node
                 return
 
         if node.val is not None:
             if self.to_explode is not None:
-                self.right = node
+                self.right = self.result[2] = node
                 return
 
             self.prev = node
@@ -96,14 +97,11 @@ class ToExplodeFinderVisitor(utils.Visitor):
     def stop(self):
         return self.right is not None
 
-    def result(self):
-        return self.left, self.to_explode, self.right
-
 
 def find_to_explode(node):
     visitor = ToExplodeFinderVisitor()
     utils.traverse(node, visitor)
-    return visitor.result()
+    return visitor.result
 
 
 class SnailFish:
