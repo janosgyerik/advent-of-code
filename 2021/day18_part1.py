@@ -81,10 +81,7 @@ class ToExplodeFinderVisitor(utils.Visitor):
             if self.to_explode is None:
                 self.left = self.prev
                 self.to_explode = node
-            else:
-                self.right = node.left
-
-            return
+                return
 
         if node.val is not None:
             if self.to_explode is not None:
