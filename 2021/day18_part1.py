@@ -98,8 +98,32 @@ class ToExplodeFinderVisitor(utils.Visitor):
         return self.right is not None
 
 
+class ToSplitFinderVisitor(utils.Visitor):
+    def __init__(self):
+        self.result = None
+
+    def get_children(self, node):
+        if node.val is not None:
+            return []
+
+        return [node.left, node.right]
+
+    def pre_visit(self, node):
+        if node.val is not None and node.val >= 10:
+            self.result = node
+
+    def stop(self):
+        return self.result is not None
+
+
 def find_to_explode(node):
     visitor = ToExplodeFinderVisitor()
+    utils.traverse(node, visitor)
+    return visitor.result
+
+
+def find_to_split(node):
+    visitor = ToSplitFinderVisitor()
     utils.traverse(node, visitor)
     return visitor.result
 
@@ -139,7 +163,7 @@ class SnailFish:
             left, to_explode, right = find_to_explode(self)
 
             if to_explode is None:
-                to_split = self.find_to_split()
+                to_split = find_to_split(self)
                 if not to_split:
                     break
 
@@ -171,18 +195,6 @@ class SnailFish:
                 parent.left = sf
             else:
                 parent.right = sf
-
-    def find_to_split(self):
-        if self.val is not None:
-            if self.val >= 10:
-                return self
-
-        else:
-            found = self.left.find_to_split()
-            if found:
-                return found
-
-            return self.right.find_to_split()
 
 
 def compute_sum(nums):
