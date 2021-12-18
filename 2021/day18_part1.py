@@ -164,25 +164,29 @@ class SnailFish:
 
             if to_explode is not None:
                 explode(left, to_explode, right)
-            else:
-                to_split = find_to_split(self)
-                if not to_split:
-                    break
-
-                left = SnailFish(to_split.val // 2)
-                right = SnailFish(math.ceil(to_split.val / 2))
-                sf = SnailFish(None, left, right)
-                left.parent = sf
-                right.parent = sf
-
-                parent = to_split.parent
-                sf.parent = parent
-                if parent.left is to_split:
-                    parent.left = sf
-                else:
-                    parent.right = sf
-
                 continue
+
+            to_split = find_to_split(self)
+            if to_split is not None:
+                split(to_split)
+                continue
+
+            break
+
+
+def split(node):
+    left = SnailFish(node.val // 2)
+    right = SnailFish(math.ceil(node.val / 2))
+    sf = SnailFish(None, left, right)
+    left.parent = sf
+    right.parent = sf
+
+    parent = node.parent
+    sf.parent = parent
+    if parent.left is node:
+        parent.left = sf
+    else:
+        parent.right = sf
 
 
 def explode(left, to_explode, right):
