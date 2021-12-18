@@ -57,12 +57,67 @@ def parse_snailfish(s):
     return Parser(s).parse()
 
 
+class ToExplodeFinderVisitor(utils.Visitor):
+    def __init__(self):
+        self.prev = None
+        self.to_explode = None
+        self.left = None
+        self.right = None
+        self.height = 0
+
+    def get_children(self, node):
+        if node.val is not None:
+            return []
+
+        return [node.left, node.right]
+
+    def pre_visit(self, node):
+        self.height += 1
+
+        if self.height == 5 and node.val is None:
+            if self.to_explode is None:
+                self.left = self.prev
+                self.to_explode = node
+            else:
+                self.right = node.left
+
+            return
+
+        if node.val is not None and node.parent is not self.to_explode:
+            if self.to_explode is not None:
+                self.right = node
+                return
+
+            self.prev = node
+
+    def post_visit(self, node):
+        self.height -= 1
+
+    def stop(self):
+        return self.right is not None
+
+    def result(self):
+        return self.left, self.to_explode, self.right
+
+
+def find_to_explode(node):
+    visitor = ToExplodeFinderVisitor()
+    utils.traverse(node, visitor)
+    return visitor.result()
+
+
 class SnailFish:
     def __init__(self, val, left=None, right=None):
         self.parent = None
         self.val = val
         self.left = left
         self.right = right
+
+    def __repr__(self):
+        if self.val is not None:
+            return str(self.val)
+
+        return f'[{self.left},{self.right}]'
 
     def print(self, indent=0):
         if self.val is not None:
@@ -82,9 +137,8 @@ class SnailFish:
         return sf
 
     def reduce(self):
-        node = self
         while True:
-            left, to_explode, right = node.find_to_explode()
+            left, to_explode, right = find_to_explode(self)
 
             if to_explode is None:
                 to_split = self.find_to_split()
@@ -120,40 +174,6 @@ class SnailFish:
             else:
                 parent.right = sf
 
-    def find_to_explode(self):
-        prev = [None]
-        to_explode = [None]
-        left = [None]
-        right = [None]
-
-        def helper(node, height):
-            if right[0] is not None:
-                return
-
-            if height == 4 and node.val is None:
-                if to_explode[0] is not None:
-                    right[0] = node.left
-                    return
-                left[0] = prev[0]
-                to_explode[0] = node
-                return
-
-            if node.val is not None:
-                if to_explode[0] is not None:
-                    right[0] = node
-                    return
-
-                prev[0] = node
-                return
-
-            height += 1
-            helper(node.left, height)
-            helper(node.right, height)
-
-        helper(self, 0)
-
-        return left[0], to_explode[0], right[0]
-
     def find_to_split(self):
         if self.val is not None:
             if self.val >= 10:
@@ -183,16 +203,6 @@ def magnitude(node):
 
 
 def solve(lines):
-    # sf1 = parse_snailfish('[[[[4,3],4],4],[7,[[8,4],9]]]')
-    # sf2 = parse_snailfish('[1,1]')
-    # sf = sf1.add(sf2)
-    # sf.print()
-    # return
-    # sf1 = parse_snailfish('[[[[1,1],[2,2]],[3,3]],[4,4]]')
-    # sf2 = parse_snailfish('[5,5]')
-    # sf = sf1.add(sf2)
-    # sf.print()
-    # return
     nums = [parse_snailfish(line) for line in lines]
     total = compute_sum(nums)
     return magnitude(total)

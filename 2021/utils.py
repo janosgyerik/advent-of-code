@@ -154,3 +154,29 @@ class MatrixPaster:
 
     def update(self, updater):
         pass
+
+
+class Visitor:
+    def pre_visit(self, node):
+        pass
+
+    def post_visit(self, node):
+        pass
+
+    def get_children(self, node):
+        return []
+
+    def stop(self):
+        return False
+
+
+def traverse(node, visitor):
+    if visitor.stop():
+        return
+
+    visitor.pre_visit(node)
+
+    for child in visitor.get_children(node):
+        traverse(child, visitor)
+
+    visitor.post_visit(node)
