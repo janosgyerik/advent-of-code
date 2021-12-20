@@ -180,3 +180,59 @@ def traverse(node, visitor):
         traverse(child, visitor)
 
     visitor.post_visit(node)
+
+
+def copy_2d(grid):
+    return [row[:] for row in grid]
+
+
+class Matrix:
+    def __init__(self, matrix):
+        self.matrix = matrix
+
+    def print(self):
+        for row in self.matrix:
+            print(' '.join(str(x) for x in row))
+
+        print()
+
+    def copy(self):
+        return Matrix(copy_2d(self.matrix))
+
+    def identity(self):
+        return Matrix(identity_matrix(len(self.matrix[0])))
+
+    def zero(self):
+        matrix = [[0] * len(row) for row in self.matrix]
+        return Matrix(matrix)
+
+    def rotations(self):
+        rotator = self.identity().matrix
+        rotator[0], rotator[1] = rotator[1], rotator[0]
+        rotator[0] = [-x for x in rotator[0]]
+
+        for raw_configuration in itertools.permutations(self.identity().matrix, len(rotator)):
+            configuration = Matrix(raw_configuration)
+            for _ in range(4):
+                configuration = configuration.multiply(rotator)
+                yield self.multiply(configuration.matrix)
+
+    def multiply(self, rotator):
+        result = self.zero().matrix
+        dim = len(result[0])
+
+        for r in range(len(result)):
+            for c in range(dim):
+                total = 0
+                for d in range(dim):
+                    total += self.matrix[r][d] * rotator[d][c]
+                result[r][c] = total
+        return Matrix(result)
+
+
+def identity_matrix(n):
+    matrix = [[0] * n for _ in range(n)]
+    for i in range(n):
+        matrix[i][i] = 1
+
+    return matrix
