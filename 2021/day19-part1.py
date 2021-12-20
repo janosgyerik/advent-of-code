@@ -9,10 +9,6 @@ from heapq import heappush, heappop, heapify
 from functools import lru_cache
 
 
-REQUIRED = 12
-MAXSHIFT = 1000
-
-
 def parse_scanners(lines):
     scanners = []
     beacons = []
@@ -46,8 +42,8 @@ class Scanner:
         self.beacons = [utils.Matrix([b]).multiply(rotator).matrix[0] for b in self.beacons]
 
     def matches(self, other):
-        required = REQUIRED
-        maxshift = MAXSHIFT * 2 + 1
+        required = 12
+        maxshift = 2000
         x1 = {x for x, y, z in self.beacons}
         xy1 = {(x, y) for x, y, z in self.beacons}
         xyz1 = {(x, y, z) for x, y, z in self.beacons}
@@ -72,14 +68,6 @@ def count_unique_beacons(scanners):
     for s in scanners:
         for b in s.beacons:
             beacons.add(tuple(b))
-
-    # counts = Counter()
-    # for s in scanners:
-    #     for b in s.beacons:
-    #         counts[tuple(b)] += 1
-    #
-    # for t in sorted(counts.keys()):
-    #     print(t, counts[t])
 
     return len(beacons)
 
@@ -133,49 +121,7 @@ def align_scanners(scanners):
             return
 
 
-def count_beacons(scanners):
-    """
-    align all scanners, based on the pattern of the detected beacons
-
-    compute the coordinates of the scanners
-
-    count the unique beacons, based on the scanner coordinates + relative beacon coordinates
-
-    how to align the scanners?
-
-    scanner states:
-    - matched: it is aligned and checked all others for alignment
-    - checking: it was aligned when visiting another scanner, but it did not check all others
-    - unmatched
-
-    for each checking scanner s1
-        for each other checking s2
-            if have at least 12 in common -> set coordinates
-
-        for each other unmatched s2
-            for each rotation of s2
-                if have at least 12 in common -> set coordinates, mark as checking, stop rotating
-
-        mark as checked
-
-    how to check if two scanners have 12 overlap?
-    - too hard when not aligned
-    - that's why we rotate!
-    - sort beacons by coordinates x, y, z
-    -
-
-    for every xshift such that there are at least 12 x in common
-        for every yshift such that there are at least 12 y in common
-            find a zshift such that there are at least 12 z in common
-    else skip
-    """
-    align_scanners(scanners)
-    return count_unique_beacons(scanners)
-
-
-def solve(lines):
-    scanners = parse_scanners(lines)
-
+def muck_around(scanners):
     def dist(p1, p2):
         return sum((p1[i] - p2[i])**2 for i in range(3))
 
@@ -222,8 +168,11 @@ def solve(lines):
 
     print(sum(sum(1 for v in s.counts.values()) for s in scanners))
 
-    return 1
-    return count_beacons(scanners)
+
+def solve(lines):
+    scanners = parse_scanners(lines)
+    align_scanners(scanners)
+    return count_unique_beacons(scanners)
 
 
 if __name__ == '__main__':
