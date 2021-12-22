@@ -107,6 +107,36 @@ class Graph:
     def print(self):
         print()
 
+    def connected_components(self):
+        uf = UnionFind(len(self.adj))
+        for u in self.adj:
+            for v in self.adj[u]:
+                uf.union(u, v)
+
+        # compress paths
+        for u in range(len(self.adj)):
+            uf.find(u)
+
+        return uf.root
+
+
+class UnionFind:
+    def __init__(self, n):
+        self.root = [-1] * n
+
+    def union(self, x, y):
+        px = self.find(x)
+        py = self.find(y)
+        self.root[px] = py
+
+    def find(self, x):
+        if self.root[x] == -1:
+            self.root[x] = x
+        elif self.root[x] != x:
+            self.root[x] = self.find(self.root[x])
+
+        return self.root[x]
+
 
 def dijkstra(graph, start, end, weight_getter: Callable[[Any, Any], Number]):
     infinity = float('inf')
