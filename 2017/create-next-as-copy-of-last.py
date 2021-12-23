@@ -4,8 +4,8 @@ import os
 import re
 import shutil
 
-solver_re = re.compile(r'day(?P<day>[012][0-9])-part(?P<part>[12]).py')
-solver_format = 'day{day:02d}-part{part}.py'
+solver_re = re.compile(r'day(?P<day>[012][0-9])_part(?P<part>[12]).py')
+solver_format = 'day{day:02d}_part{part}.py'
 
 
 def validate_day_and_part(day, part):
