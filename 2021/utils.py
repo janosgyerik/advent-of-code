@@ -95,6 +95,9 @@ class PriorityQueue:
 
         raise KeyError('pop from an empty priority queue')
 
+    def __len__(self):
+        return len(self._pq)
+
 
 class Graph:
     def __init__(self):
