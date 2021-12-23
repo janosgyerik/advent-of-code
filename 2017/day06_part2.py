@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import math
 
-import codebook
+import utils
 import re
 from collections import namedtuple, Counter, deque, defaultdict
 from itertools import product
@@ -42,7 +42,7 @@ class Machine:
 
 
 def solve(lines):
-    m = Machine(codebook.parse_ints(lines[0]))
+    m = Machine(utils.parse_ints(lines[0]))
 
     while m.redistribute():
         pass
@@ -57,4 +57,4 @@ def solve(lines):
 
 
 if __name__ == '__main__':
-    codebook.solve(solve)
+    utils.solve(solve)

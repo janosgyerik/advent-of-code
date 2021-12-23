@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import codebook
+import utils
 import re
 from collections import namedtuple, Counter, deque, defaultdict
 from itertools import product
@@ -31,4 +31,4 @@ def solve(lines):
 
 
 if __name__ == '__main__':
-    codebook.solve(solve)
+    utils.solve(solve)

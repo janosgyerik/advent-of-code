@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import codebook
+import utils
 
 
 def checksum(nums):
@@ -18,11 +18,11 @@ def checksum(nums):
 def solve(lines):
     total = 0
     for line in lines:
-        nums = codebook.parse_ints(line)
+        nums = utils.parse_ints(line)
         total += checksum(nums)
 
     return total
 
 
 if __name__ == '__main__':
-    codebook.solve(solve)
+    utils.solve(solve)

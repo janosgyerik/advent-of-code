@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import codebook
+import utils
 from collections import deque
 
 
@@ -53,4 +53,4 @@ def solve(lines):
 
 
 if __name__ == '__main__':
-    codebook.solve(solve)
+    utils.solve(solve)
