@@ -40,70 +40,44 @@ class Machine:
 
         return fun
 
-    def _mul_literal(self, dest, arg):
+    def _eval(self, arg):
+        if arg.isalpha():
+            return self.vars[varmap[arg]]
+
+        return int(arg)
+
+    def _mul(self, dest, arg):
         def fun():
-            self.vars[dest] *= arg
+            self.vars[dest] *= self._eval(arg)
 
         return fun
 
-    def _mul_var(self, dest, index):
+    def _div(self, dest, arg):
         def fun():
-            self.vars[dest] *= self.vars[index]
+            arg2 = self._eval(arg)
+            assert arg2 != 0
+            self.vars[dest] //= arg2
 
         return fun
 
-    def _div_literal(self, dest, arg):
-        assert arg != 0
-
-        def fun():
-            self.vars[dest] //= arg
-
-        return fun
-
-    def _div_var(self, dest, index):
-        def fun():
-            assert self.vars[index] != 0
-            self.vars[dest] //= self.vars[index]
-
-        return fun
-
-    def _mod_literal(self, dest, arg):
-        assert arg > 0
-
-        def fun():
-            self.vars[dest] %= arg
-
-        return fun
-
-    def _mod_var(self, dest, index):
+    def _mod(self, dest, arg):
         def fun():
             assert self.vars[dest] >= 0
-            assert self.vars[index] > 0
-            self.vars[dest] %= self.vars[index]
+            arg2 = self._eval(arg)
+            assert arg2 > 0
+            self.vars[dest] %= arg2
 
         return fun
 
-    def _add_literal(self, dest, arg):
+    def _add(self, dest, arg):
         def fun():
-            self.vars[dest] += arg
+            self.vars[dest] += self._eval(arg)
 
         return fun
 
-    def _add_var(self, dest, index):
+    def _eql(self, dest, arg):
         def fun():
-            self.vars[dest] += self.vars[index]
-
-        return fun
-
-    def _eql_literal(self, dest, arg):
-        def fun():
-            self.vars[dest] = int(self.vars[dest] == arg)
-
-        return fun
-
-    def _eql_var(self, dest, index):
-        def fun():
-            self.vars[dest] = int(self.vars[dest] == self.vars[index])
+            self.vars[dest] = int(self.vars[dest] == self._eval(arg))
 
         return fun
 
@@ -121,34 +95,19 @@ class Machine:
         assert not dest.isnumeric()
 
         if op == 'add':
-            if arg.isalpha():
-                return self._add_var(varmap[dest], varmap[arg])
-            else:
-                return self._add_literal(varmap[dest], int(arg))
+            return self._add(varmap[dest], arg)
 
         if op == 'mul':
-            if arg.isalpha():
-                return self._mul_var(varmap[dest], varmap[arg])
-            else:
-                return self._mul_literal(varmap[dest], int(arg))
+            return self._mul(varmap[dest], arg)
 
         if op == 'div':
-            if arg.isalpha():
-                return self._div_var(varmap[dest], varmap[arg])
-            else:
-                return self._div_literal(varmap[dest], int(arg))
+            return self._div(varmap[dest], arg)
 
         if op == 'mod':
-            if arg.isalpha():
-                return self._mod_var(varmap[dest], varmap[arg])
-            else:
-                return self._mod_literal(varmap[dest], int(arg))
+            return self._mod(varmap[dest], arg)
 
         if op == 'eql':
-            if arg.isalpha():
-                return self._eql_var(varmap[dest], varmap[arg])
-            else:
-                return self._eql_literal(varmap[dest], int(arg))
+            return self._eql(varmap[dest], arg)
 
         raise ValueError("not implemented:", s)
 
