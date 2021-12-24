@@ -94,22 +94,18 @@ class Machine:
         op, dest, arg = args
         assert not dest.isnumeric()
 
-        if op == 'add':
-            return self._add(varmap[dest], arg)
+        return self._bifun(op, dest, arg)
 
-        if op == 'mul':
-            return self._mul(varmap[dest], arg)
+    def _bifun(self, op, dest, arg):
+        self._bifuns = {
+            'add': self._add,
+            'mul': self._mul,
+            'div': self._div,
+            'mod': self._mod,
+            'eql': self._eql,
+        }
 
-        if op == 'div':
-            return self._div(varmap[dest], arg)
-
-        if op == 'mod':
-            return self._mod(varmap[dest], arg)
-
-        if op == 'eql':
-            return self._eql(varmap[dest], arg)
-
-        raise ValueError("not implemented:", s)
+        return self._bifuns[op](varmap[dest], arg)
 
 
 def execute(m, digits):
@@ -128,8 +124,11 @@ def solve(lines):
     # a6 - 4 == a7
     # a10 - 6 == a11
     # a12 + 1 == a13
-    #                  0  1  2  3  4  5  6  7  8  9
-    return execute(m, [1, 1, 1, 1, 8, 1, 5, 1, 6, 3, 7, 1, 1, 2])
+    #                 0  1  2  3  4  5  6  7  8  9
+    print(execute(m, [7, 4, 9, 2, 9, 9, 9, 5, 9, 9, 9, 3, 8, 9]))
+    print(execute(m, [1, 1, 1, 1, 8, 1, 5, 1, 6, 3, 7, 1, 1, 2]))
+    print(execute(m, [9] * 14))
+    print(execute(m, [1] * 14))
 
 
 if __name__ == '__main__':
