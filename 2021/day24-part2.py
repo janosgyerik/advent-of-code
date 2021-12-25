@@ -15,13 +15,12 @@ varmap = {c: i for i, c in enumerate("wxyz")}
 
 
 class Machine:
-    def __init__(self, instructions):
-        self.instructions = [self._parse_instruction(s)
-                             for s in instructions
-                             if not s.startswith('#')]
+    def __init__(self, lines):
         self.vars = None
         self.inputs = None
         self.reset()
+
+        self.instructions = self._parse_instructions(lines)
 
     def reset(self):
         self.vars = [0] * 4
@@ -32,6 +31,34 @@ class Machine:
         for inst in self.instructions:
             inst()
         return self.vars[-1]
+
+    def _parse_instructions(self, lines):
+        bifuns = {
+            'add': self._add,
+            'mul': self._mul,
+            'div': self._div,
+            'mod': self._mod,
+            'eql': self._eql,
+        }
+
+        def parse_instruction(s):
+            args = s.split()
+            if len(args) == 2:
+                inp, varname = args
+                assert inp == 'inp'
+                assert varname.isalpha()
+                return self._inp(varmap[varname])
+
+            assert len(args) == 3
+
+            op, dest, arg = args
+            assert not dest.isnumeric()
+
+            return bifuns[op](varmap[dest], arg)
+
+        return [parse_instruction(s)
+                for s in lines
+                if not s.startswith('#')]
 
     def _inp(self, dest):
         def fun():
@@ -80,32 +107,6 @@ class Machine:
             self.vars[dest] = int(self.vars[dest] == self._eval(arg))
 
         return fun
-
-    def _parse_instruction(self, s):
-        args = s.split()
-        if len(args) == 2:
-            inp, varname = args
-            assert inp == 'inp'
-            assert varname.isalpha()
-            return self._inp(varmap[varname])
-
-        assert len(args) == 3
-
-        op, dest, arg = args
-        assert not dest.isnumeric()
-
-        return self._bifun(op, dest, arg)
-
-    def _bifun(self, op, dest, arg):
-        self._bifuns = {
-            'add': self._add,
-            'mul': self._mul,
-            'div': self._div,
-            'mod': self._mod,
-            'eql': self._eql,
-        }
-
-        return self._bifuns[op](varmap[dest], arg)
 
 
 def execute(m, digits):
