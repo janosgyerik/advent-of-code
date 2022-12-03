@@ -19,7 +19,6 @@ scoremap = {
     '>': 4,
 }
 
-
 parens = {
     '(': ')',
     '<': '>',
@@ -28,44 +27,36 @@ parens = {
 }
 
 
-openers = parens.keys()
+def check_syntax(s):
+    """
+    Checks the input for unexpected or missing closing characters.
+    Returns a pair of detected problems:
+    the first value is the first unexpected closing character, if any;
+    the second value is the suffix string of missing closing characters, if any.
 
-
-def find_illegal(s):
+    Returns (None, None) for a well-formatted string.
+    Returns (c, None) for a string where c is the first unexpected closing character.
+    Returns (None, suffix) for a string where the suffix would have to be appended to
+    make the string well-formed.
+    """
     stack = []
     for c in s:
-        if c in openers:
-            stack.append(c)
+        if c in parens:
+            stack.append(parens[c])
         else:
-            if not stack:
-                return c
-            if c != parens[stack[-1]]:
-                return c
+            if not stack or c != stack[-1]:
+                return c, None
 
             stack.pop()
 
-
-def find_completion(s):
-    stack = []
-    for c in s:
-        if c in openers:
-            stack.append(c)
-        else:
-            if not stack:
-                return []
-            if c != parens[stack[-1]]:
-                return []
-
-            stack.pop()
-
-    return stack
+    return None, ''.join(reversed(stack))
 
 
-def compute_score(stack):
+def compute_score(suffix):
     score = 0
-    while stack:
+    for c in suffix:
         score *= 5
-        score += scoremap[parens[stack.pop()]]
+        score += scoremap[c]
 
     return score
 
@@ -73,12 +64,11 @@ def compute_score(stack):
 def solve(lines):
     scores = []
     for line in lines:
-        completion = find_completion(line)
-        if completion:
-            scores.append(compute_score(completion))
+        _, suffix = check_syntax(line)
+        if suffix:
+            scores.append(compute_score(suffix))
 
     scores.sort()
-
     return scores[len(scores) // 2]
 
 
