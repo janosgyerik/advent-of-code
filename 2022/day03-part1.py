@@ -17,7 +17,7 @@ def read_lines(path):
 
 
 def find_common(left, right):
-    x = set(left).intersection(set(right))
+    x = set(left) & set(right)
     assert len(x) == 1
     (x,) = x
     return x
