@@ -2,10 +2,13 @@
 
 set -euo pipefail
 
-cd "$(dirname "$0")"
-. config.sh
-
 year=$(basename "$PWD")
+[[ $year == 20[1-9][0-9] ]] || {
+    echo "Expected the directory name in $PWD to be a valid year, got: $year"
+    exit 1
+}
+
+. ../config.sh
 
 input_file=tmp/input.txt
 
