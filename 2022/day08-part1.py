@@ -17,6 +17,28 @@ def read_lines(path):
         return [line.rstrip() for line in fh.readlines()]
 
 
+def count_in_direction(grid, r, c, dr, dc, counted):
+    dim = len(grid)
+
+    r2, c2 = r, c
+    count = 0
+    highest = -1
+    while True:
+        current = grid[r2][c2]
+        if current > highest:
+            if (r2, c2) not in counted:
+                count += 1
+                counted.add((r2, c2))
+            highest = current
+
+        r2 += dr
+        c2 += dc
+        if not (0 <= r2 < dim and 0 <= c2 < dim):
+            break
+
+    return count
+
+
 def solve(lines):
     dim = len(lines)
     grid = [[int(x) for x in line] for line in lines]
@@ -24,52 +46,11 @@ def solve(lines):
     counted = set()
     count = 0
     for r in range(dim):
-        highest = -1
-        last = 0
-        for c in range(dim):
-            x = grid[r][c]
-            if x > highest:
-                if (r, c) not in counted:
-                    count += 1
-                    counted.add((r, c))
-                highest = x
-                last = c
-
-        highest = -1
-        for c in range(dim - 1, -1, -1):
-            if c == last:
-                break
-
-            x = grid[r][c]
-            if x > highest:
-                if (r, c) not in counted:
-                    count += 1
-                    counted.add((r, c))
-                highest = x
-
+        count += count_in_direction(grid, r, 0, 0, 1, counted)
+        count += count_in_direction(grid, r, dim - 1, 0, -1, counted)
     for c in range(dim):
-        highest = -1
-        last = 0
-        for r in range(dim):
-            x = grid[r][c]
-            if x > highest:
-                if (r, c) not in counted:
-                    count += 1
-                    counted.add((r, c))
-                highest = x
-                last = r
-
-        highest = -1
-        for r in range(dim - 1, -1, -1):
-            if r == last:
-                break
-
-            x = grid[r][c]
-            if x > highest:
-                if (r, c) not in counted:
-                    count += 1
-                    counted.add((r, c))
-                highest = x
+        count += count_in_direction(grid, 0, c, 1, 0, counted)
+        count += count_in_direction(grid, dim - 1, c, -1, 0, counted)
 
     return count
 
