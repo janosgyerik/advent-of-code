@@ -30,8 +30,9 @@ class Rope:
         self.x = 0
         self.y = 0
         s = (0, 0)
-        self.head = list(s)
-        self.tail = list(s)
+        self.knots_count = 2
+        self.knots = [list(s) for _ in range(self.knots_count)]
+        self.head = self.knots[0]
         self.visited = {s}
 
     def move(self, d, steps):
@@ -43,46 +44,41 @@ class Rope:
             y += dy
             self.head[0] = x
             self.head[1] = y
-            self.follow_head()
+            for i in range(1, self.knots_count):
+                self.follow(self.knots[i-1], self.knots[i])
 
-    def follow_head(self):
-        dx = abs(self.head[0] - self.tail[0])
-        dy = abs(self.head[1] - self.tail[1])
-        if dx <= 1 and dy <= 1:
+            self.visited.add((self.knots[-1][0], self.knots[-1][1]))
+
+    @staticmethod
+    def follow(head, knot):
+        def _follow(index):
+            if head[index] < knot[index]:
+                knot[index] = head[index] + 1
+            elif head[index] > knot[index]:
+                knot[index] = head[index] - 1
+
+        if head[0] == knot[0]:
+            _follow(1)
             return
 
-        if dx == 2:
-            if self.head[0] < self.tail[0]:
-                self.tail[0] = self.head[0] + 1
-            else:
-                self.tail[0] = self.head[0] - 1
+        if head[1] == knot[1]:
+            _follow(0)
+            return
 
-            self.tail[1] = self.head[1]
+        dx = head[0] - knot[0]
+        dy = head[1] - knot[1]
+        adx = abs(dx)
+        ady = abs(dy)
 
-        elif dy == 2:
-            if self.head[1] < self.tail[1]:
-                self.tail[1] = self.head[1] + 1
-            else:
-                self.tail[1] = self.head[1] - 1
-
-            self.tail[0] = self.head[0]
-
-        elif self.head[0] + 2 == self.tail[0]:
-            self.tail[0] = self.head[0] + 1
-        elif self.head[0] - 2 == self.tail[0]:
-            self.tail[0] = self.head[1] - 1
-        elif self.head[1] + 2 == self.tail[1]:
-            self.tail[1] = self.head[1] + 1
-        elif self.head[1] - 2 == self.tail[1]:
-            self.tail[1] = self.head[1] - 1
-        else:
-            raise ValueError(f'unexpected relative positions: head={self.head} tail={self.tail}')
-
-        self.visited.add(tuple(self.tail))
+        if adx > 1 or ady > 1:
+            dx = dx / adx
+            dy = dy / ady
+            knot[0] += dx
+            knot[1] += dy
 
     def count_visited(self):
         return len(self.visited)
-
+    
 
 def solve(lines):
     r = Rope()
