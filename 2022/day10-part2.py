@@ -17,16 +17,26 @@ def read_lines(path):
         return [line.rstrip() for line in fh.readlines()]
 
 
-def x_at(seq, c):
-    prev = 0
-    for cycle, x in seq:
-        if cycle == c:
-            return x
-        if c < cycle:
-            return prev
-        prev = x
+def binary_search(items, target, fun):
+    left = 0
+    right = len(items)
+    while left < right:
+        mid = left + (right - left) // 2
+        current = fun(mid)
+        if target < current:
+            right = mid
+        else:
+            left = mid + 1
 
-    raise ValueError("not found")
+    return items[left - 1]
+
+
+def x_at(seq, c):
+    def fun(index):
+        return seq[index][0]
+
+    _, x = binary_search(seq, c, fun)
+    return x
 
 
 def render_sprite(sprite):
