@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from heapq import heappush, heappop, heapify
 from itertools import product
+from utils.binary_search import binary_search
 
 
 def ints(line):
@@ -15,20 +16,6 @@ def ints(line):
 def read_lines(path):
     with open(path) as fh:
         return [line.rstrip() for line in fh.readlines()]
-
-
-def binary_search(items, target, fun):
-    left = 0
-    right = len(items)
-    while left < right:
-        mid = left + (right - left) // 2
-        current = fun(mid)
-        if target < current:
-            right = mid
-        else:
-            left = mid + 1
-
-    return items[left - 1]
 
 
 def x_at(seq, c):
