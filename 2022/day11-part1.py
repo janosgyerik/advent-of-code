@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from utils import parsing
 import functools
 import re
 import sys
@@ -78,20 +79,16 @@ def parse_monkeys(lines):
     def double():
         return lambda x: x + x
 
-    re_template = re.compile(r'''
+    re_template = r'''
 Monkey \d:
   Starting items: (?P<natnums>.+)
   Operation: new = (?P<raw_op>.+)
   Test: divisible by (?P<div>\d+)
     If true: throw to monkey (?P<true_target>\d)
     If false: throw to monkey (?P<false_target>\d)
-    '''.strip())
+    '''.strip()
     monkeys = []
-    for i in range(0, len(lines), 7):
-        text = '\n'.join(lines[i:i + 7])
-        match = re_template.match(text)
-        assert match, 'did not match: ' + text
-
+    for match in parsing.items_from_template_from_lines(re_template, lines):
         items = natnums(match.group('natnums'))
         op_line = match.group('raw_op')
         if 'old * old' in op_line:
