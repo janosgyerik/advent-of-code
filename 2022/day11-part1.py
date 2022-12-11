@@ -78,11 +78,22 @@ def parse_monkeys(lines):
     def double():
         return lambda x: x + x
 
+    re_template = re.compile(r'''
+Monkey \d:
+  Starting items: (?P<natnums>.+)
+  Operation: new = (?P<raw_op>.+)
+  Test: divisible by (?P<div>\d+)
+    If true: throw to monkey (?P<true_target>\d)
+    If false: throw to monkey (?P<false_target>\d)
+    '''.strip())
     monkeys = []
     for i in range(0, len(lines), 7):
-        it = (line for line in lines[i + 1:])
-        items = natnums(next(it))
-        op_line = next(it)
+        text = '\n'.join(lines[i:i + 7])
+        match = re_template.match(text)
+        assert match, 'did not match: ' + text
+
+        items = natnums(match.group('natnums'))
+        op_line = match.group('raw_op')
         if 'old * old' in op_line:
             op = square()
         elif 'old + old' in op_line:
@@ -94,9 +105,9 @@ def parse_monkeys(lines):
             else:
                 op = plus(op_arg)
 
-        div = natnums(next(it))[0]
-        true_target = natnums(next(it))[0]
-        false_target = natnums(next(it))[0]
+        div = int(match.group('div'))
+        true_target = int(match.group('true_target'))
+        false_target = int(match.group('false_target'))
 
         monkeys.append(Monkey(items, op, div, true_target, false_target))
 
