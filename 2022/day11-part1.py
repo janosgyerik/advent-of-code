@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import functools
+import re
 import sys
 from collections import namedtuple, Counter, deque, defaultdict
 from dataclasses import dataclass
@@ -10,9 +11,19 @@ from typing import Callable, List
 
 from utils.binary_search import binary_search
 
+re_natnums = re.compile(r'(?P<int>\d+)')
 
-def ints(line):
-    return [int(x) for x in line.split(' ')]
+
+def ints(s):
+    return [int(x) for x in s.split()]
+
+
+def natnums(s):
+    """
+    >>> natnums("foo divisible by 3 and 2")
+    [3, 2]
+    """
+    return [int(x) for x in re_natnums.findall(s)]
 
 
 def read_lines(path):
@@ -69,37 +80,23 @@ def parse_monkeys(lines):
 
     monkeys = []
     for i in range(0, len(lines), 7):
-        line = lines[i]
-        assert line.startswith("Monkey")
-
-        i += 1
-        line = lines[i]
-        items_raw = line.split(': ')[1]
-        items = [int(x) for x in items_raw.split(', ')]
-
-        i += 1
-        line = lines[i]
-        op_raw, num = line.split(' old ')[1].split()
-        if op_raw == '*':
-            if num == 'old':
-                op = square()
-            else:
-                op = mul(int(num))
-        elif op_raw == '+':
-            if num == 'old':
-                op = double()
-            else:
-                op = plus(int(num))
+        it = (line for line in lines[i + 1:])
+        items = natnums(next(it))
+        op_line = next(it)
+        if 'old * old' in op_line:
+            op = square()
+        elif 'old + old' in op_line:
+            op = double()
         else:
-            raise ValueError(f'line: {line}')
+            op_arg = natnums(op_line)[0]
+            if '*' in op_line:
+                op = mul(op_arg)
+            else:
+                op = plus(op_arg)
 
-        i += 1
-        line = lines[i]
-        assert ' divisible by ' in line, line
-        div = int(line.split(' divisible by ')[1])
-
-        true_target = int(lines[i+1].split(' monkey ')[1])
-        false_target = int(lines[i+2].split(' monkey ')[1])
+        div = natnums(next(it))[0]
+        true_target = natnums(next(it))[0]
+        false_target = natnums(next(it))[0]
 
         monkeys.append(Monkey(items, op, div, true_target, false_target))
 
