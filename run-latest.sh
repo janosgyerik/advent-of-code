@@ -8,7 +8,7 @@ year=$(basename "$PWD")
     exit 1
 }
 
-prog=$(command ls ./day??-part?.py | tail -n 1)
+prog=$(command ls ./day??[_-]part?.py | tail -n 1)
 
 if [ $# = 0 ]; then
     set -- tmp/input.txt
