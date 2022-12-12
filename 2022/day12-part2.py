@@ -48,53 +48,43 @@ class Grid:
         self.start = start
         self.end = end
 
-    def find_shortest(self, start, end):
+    def find_dists(self):
         rows = len(self.grid)
         cols = len(self.grid[0])
 
-        seen = {start}
-        q = deque([start])
+        seen = {self.end}
+        q = deque([self.end])
         d = 0
         while q:
             for _ in range(len(q)):
                 current = q.popleft()
-                if current == end:
-                    return d
-
                 r, c = current
                 e0 = self.grid[r][c]
+                if e0 == ord('a'):
+                    yield d
+                    continue
+
                 for dr, dc in (1, 0), (-1, 0), (0, 1), (0, -1):
                     r2 = r + dr
                     c2 = c + dc
-                    if not (0 <= r2 < rows and 0 <= c2 < cols):
-                        continue
-
-                    if (r2, c2) in seen:
+                    if not (0 <= r2 < rows and 0 <= c2 < cols) or (r2, c2) in seen:
                         continue
 
                     e1 = self.grid[r2][c2]
-                    if e1 <= e0 + 1:
+                    if e1 >= e0 - 1:
                         seen.add((r2, c2))
                         q.append((r2, c2))
 
             d += 1
 
-        return float('inf')
-
     def print(self):
         for row in self.grid:
             print(''.join(chr(c) for c in row))
 
-    def find_shortest_from_all_a(self):
-        for r, row in enumerate(self.grid):
-            for c, x in enumerate(row):
-                if x == ord('a'):
-                    yield self.find_shortest((r, c), self.end)
-
 
 def solve(lines):
     grid = parse_grid(lines)
-    return min(grid.find_shortest_from_all_a())
+    return min(grid.find_dists())
 
 
 def main():
