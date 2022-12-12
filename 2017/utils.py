@@ -127,6 +127,10 @@ class UnionFind:
     def __init__(self, n):
         self.root = [-1] * n
 
+    def ensure_capacity(self, size):
+        while size >= len(self.root):
+            self.root.extend([-1] * len(self.root))
+
     def union(self, x, y):
         px = self.find(x)
         py = self.find(y)
@@ -139,6 +143,32 @@ class UnionFind:
             self.root[x] = self.find(self.root[x])
 
         return self.root[x]
+
+
+class UnionFindAutoMapper:
+    def __init__(self, initial_capacity=1000):
+        self.uf = UnionFind(initial_capacity)
+        self.count = 0
+        self._mapping = {}
+
+    def _map(self, u):
+        if u not in self._mapping:
+            self._mapping[u] = self.count
+            self.count += 1
+            self.uf.ensure_capacity(self.count)
+
+        return self._mapping[u]
+
+    def union(self, u, v):
+        mu = self._map(u)
+        mv = self._map(v)
+        self.uf.union(mu, mv)
+
+    def find(self, u):
+        return self.uf.find(self._map(u))
+
+    def keys(self):
+        return self._mapping.keys()
 
 
 def dijkstra(graph, start, end, weight_getter: Callable[[Any, Any], Number]):
