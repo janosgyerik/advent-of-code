@@ -101,23 +101,14 @@ def mergesort(items, start, end):
     while i < mid and j < end:
         if cmp(items[i], items[j]) <= 0:
             merged.append(items[i])
-            merged.append(items[j])
+            i += 1
         else:
             merged.append(items[j])
-            merged.append(items[i])
-        i += 1
-        j += 1
+            j += 1
 
     merged.extend(items[i:mid])
     merged.extend(items[j:end])
     items[start:end] = merged
-
-
-def crappysort(items):
-    for i in range(len(items)):
-        for j in range(i + 1, len(items)):
-            if cmp(items[i], items[j]) > 0:
-                items[i], items[j] = items[j], items[i]
 
 
 def solve(lines):
@@ -126,8 +117,7 @@ def solve(lines):
         packets.append(left)
         packets.append(right)
 
-    # mergesort(packets, 0, len(packets))
-    crappysort(packets)
+    mergesort(packets, 0, len(packets))
 
     a = b = 0
     for i, p in enumerate(packets):
