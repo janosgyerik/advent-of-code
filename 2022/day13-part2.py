@@ -87,40 +87,14 @@ def cmp(left, right):
     return cmp(left, [right])
 
 
-def mergesort(items, start, end):
-    if start + 1 >= end:
-        return
-
-    mid = start + (end - start) // 2
-    mergesort(items, start, mid)
-    mergesort(items, mid, end)
-
-    i = start
-    j = mid
-    merged = []
-    while i < mid and j < end:
-        if cmp(items[i], items[j]) <= 0:
-            merged.append(items[i])
-            i += 1
-        else:
-            merged.append(items[j])
-            j += 1
-
-    merged.extend(items[i:mid])
-    merged.extend(items[j:end])
-    items[start:end] = merged
-
-
 def solve(lines):
     packets = [[[2]], [[6]]]
     for left, right in parse_pairs(lines):
         packets.append(left)
         packets.append(right)
 
-    mergesort(packets, 0, len(packets))
-
     a = b = 0
-    for i, p in enumerate(packets):
+    for i, p in enumerate(sorted(packets, key=functools.cmp_to_key(cmp))):
         if p == [[2]]:
             a = i + 1
         elif p == [[6]]:
