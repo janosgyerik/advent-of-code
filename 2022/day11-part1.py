@@ -21,7 +21,7 @@ def ints(s):
 
 def natnums(s):
     """
-    >>> natnums("foo divisible by 3 and 2")
+    >>> extract_natural_numbers("foo divisible by 3 and 2")
     [3, 2]
     """
     return [int(x) for x in re_natnums.findall(s)]
@@ -81,7 +81,7 @@ def parse_monkeys(lines):
 
     re_template = r'''
 Monkey \d:
-  Starting items: (?P<natnums>.+)
+  Starting items: (?P<extract_natural_numbers>.+)
   Operation: new = (?P<raw_op>.+)
   Test: divisible by (?P<div>\d+)
     If true: throw to monkey (?P<true_target>\d)
@@ -89,7 +89,7 @@ Monkey \d:
     '''.strip()
     monkeys = []
     for match in parsing.items_from_template_from_lines(re_template, lines):
-        items = natnums(match.group('natnums'))
+        items = natnums(match.group('extract_natural_numbers'))
         op_line = match.group('raw_op')
         if 'old * old' in op_line:
             op = square()

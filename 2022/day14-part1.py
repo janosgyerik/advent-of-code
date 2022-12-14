@@ -23,7 +23,7 @@ def parse_paths(lines):
         path = []
         paths.append(path)
         for point in line.split(' -> '):
-            r, c = parsing.natnums(point)
+            r, c = parsing.extract_natural_numbers(point)
             path.append((r, c))
 
     return paths

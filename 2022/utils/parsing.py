@@ -3,9 +3,9 @@ import re
 RE_NATNUMS = re.compile(r'(?P<int>\d+)')
 
 
-def natnums(s):
+def extract_natural_numbers(s):
     """
-    >>> natnums("foo divisible by 3 and 2")
+    >>> extract_natural_numbers("foo divisible by 3 and 2")
     [3, 2]
     """
     return [int(x) for x in RE_NATNUMS.findall(s)]
