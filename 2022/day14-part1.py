@@ -9,6 +9,7 @@ from itertools import product
 from typing import Callable, List
 
 from utils.binary_search import binary_search
+from utils import parsing
 
 
 def read_lines(path):
@@ -22,7 +23,7 @@ def parse_paths(lines):
         path = []
         paths.append(path)
         for point in line.split(' -> '):
-            r, c = [int(x) for x in point.split(',')]
+            r, c = parsing.natnums(point)
             path.append((r, c))
 
     return paths
