@@ -52,50 +52,63 @@ def to_bits(row):
 
 class Shape:
     def __init__(self, rows, width, startcol):
-        shift = width - (startcol + len(rows[0]))
+        self.width = len(rows[0])
+        self.height = len(rows)
+
+        shift = width - (startcol + self.width)
         self.rows = [to_bits(row) << shift for row in rows]
 
-    def height(self):
-        return len(self.rows)
+        value = 0
+        for row in self.rows:
+            value <<= 8
+            value |= row
+        self.value = value
+
+        self.left = self
+        self.right = self
+
+    def shift(self, left):
+        if left:
+            return self.left
+        return self.right
+
+    def __str__(self):
+        return '\n'.join(to_chars(row, 7) for row in self.rows)
+
+
+def create_shape(rows, width, startcol):
+    base = Shape(rows, width, startcol)
+
+    prev = base
+    for col in range(startcol + 1, width - base.width + 1):
+        shape = Shape(rows, width, col)
+        prev.right = shape
+        shape.left = prev
+        prev = shape
+
+    next_ = base
+    for col in range(startcol - 1, -1, -1):
+        shape = Shape(rows, width, col)
+        next_.left = shape
+        shape.right = next_
+        next_ = shape
+
+    return base
 
 
 class Shapes:
     def __init__(self, width, startcol):
         self.shapes = deque([
-            Shape(['####'], width, startcol),
-            Shape([' # ', '###', ' # '], width, startcol),
-            Shape(['  #', '  #', '###'], width, startcol),
-            Shape(['#', '#', '#', '#'], width, startcol),
-            Shape(['##', '##'], width, startcol),
+            create_shape(['####'], width, startcol),
+            create_shape([' # ', '###', ' # '], width, startcol),
+            create_shape(['  #', '  #', '###'], width, startcol),
+            create_shape(['#', '#', '#', '#'], width, startcol),
+            create_shape(['##', '##'], width, startcol),
         ])
 
     def next(self):
         self.shapes.rotate(-1)
         return self.shapes[-1]
-
-
-class Rock:
-    def __init__(self, shape, y):
-        self.rows = shape.rows.copy()
-        self.y = y
-
-    def coordinates(self):
-        coordinates = []
-        for r, row in enumerate(self.rows):
-            coordinates.append((row, self.y - r))
-
-        return reversed(coordinates)
-
-    def shift(self, left):
-        if left:
-            for i, row in enumerate(self.rows):
-                self.rows[i] = row << 1
-        else:
-            for i, row in enumerate(self.rows):
-                self.rows[i] = row >> 1
-
-    def __str__(self):
-        return '\n'.join(to_chars(row, 7) for row in self.rows)
 
 
 def to_chars(bits, width):
@@ -113,12 +126,25 @@ def to_chars(bits, width):
     return ''.join(reversed(chars))
 
 
+class Segment:
+    def __init__(self, chamber, height):
+        self.mask = (1 << 8 * height) - 1
+        self.index = chamber.height() - 1
+        self.chamber = chamber.chamber
+        self.value = 0
+
+    def shiftdown(self):
+        self.value = (self.value << 8) & self.mask
+        self.value |= self.chamber[self.index]
+        self.index -= 1
+
+
 class Chamber:
     def __init__(self, width, startcol, jets):
         self.width = width
         self.jets = jets
         self.shapes = Shapes(width, startcol)
-        self.chamber = deque()
+        self.chamber = deque([(1 << 8) - 1])
         self.full_row = (1 << width) - 1
 
     def height(self):
@@ -127,51 +153,41 @@ class Chamber:
     def simulate(self, count):
         for _ in range(count):
             shape = self.shapes.next()
-            rock = Rock(shape, self.height() + 3 + shape.height() - 1)
+            for _ in range(3):
+                left = self.jets.next()
+                shape = shape.shift(left)
+
+            segment = Segment(self, shape.height)
             while True:
                 left = self.jets.next()
-                self.tryshift(rock, left)
-                if not self.tryfall(rock):
-                    self.add(rock)
+                shape = self.tryshift(shape, left, segment)
+                segment.shiftdown()
+                if not self.tryfall(shape, segment):
+                    self.add(shape, segment)
                     break
 
-    def add(self, rock):
-        for bits, y in rock.coordinates():
-            if self.height() == y:
-                self.chamber.append(0)
-            self.chamber[y] |= bits
-
-    def tryshift(self, rock, left):
-        for bits, y in rock.coordinates():
-            if left:
-                bits2 = bits << 1
-                if bits2 > self.full_row:
-                    return False
+    def add(self, shape, segment):
+        for i, row in reversed(list(enumerate(shape.rows))):
+            chamber_index = segment.index + 2 + (shape.height - i - 1)
+            if chamber_index >= self.height():
+                self.chamber.append(row)
             else:
-                if bits & 1:
-                    return False
-                bits2 = bits >> 1
+                self.chamber[chamber_index] |= row
 
-            if self.height() <= y:
-                continue
+    def tryshift(self, shape, left, segment):
+        assert (shape.value & segment.value) == 0, (shape.value, segment.value)
 
-            if self.chamber[y] & bits2:
-                return False
+        shifted = shape.shift(left)
+        if shifted == shape:
+            return shape
 
-        rock.shift(left)
-        return True
+        if shifted.value & segment.value:
+            return shape
 
-    def tryfall(self, rock):
-        for bits, y in rock.coordinates():
-            y -= 1
-            if self.height() <= y:
-                continue
+        return shifted
 
-            if y < 0 or (self.chamber[y] & bits):
-                return False
-
-        rock.y -= 1
-        return True
+    def tryfall(self, shape, segment):
+        return (shape.value & segment.value) == 0
 
     def print(self):
         for row in reversed(self.chamber):
@@ -187,7 +203,7 @@ def solve(lines, count, *args):
     chamber.simulate(count)
     if args:
         chamber.print()
-    return chamber.height()
+    return chamber.height() - 1
 
 
 def main():
