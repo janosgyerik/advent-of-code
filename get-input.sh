@@ -18,7 +18,7 @@ download_input() {
 
     input_url=https://adventofcode.com/$year/day/$day/input
     curl -sb "session=$session" "$input_url" | tee "$input_file"
-    wc -l "$input_file"
+    wc "$input_file"
 }
 
 if [ $# = 0 ]; then
