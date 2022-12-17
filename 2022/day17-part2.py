@@ -146,12 +146,13 @@ class Chamber:
         self.shapes = Shapes(width, startcol)
         self.chamber = deque([(1 << 8) - 1])
         self.full_row = (1 << width) - 1
+        self.counts = defaultdict(list)
 
     def height(self):
         return len(self.chamber)
 
     def simulate(self, count):
-        for _ in range(count):
+        for i in range(count):
             shape = self.shapes.next()
             for _ in range(3):
                 left = self.jets.next()
@@ -164,6 +165,7 @@ class Chamber:
                 segment.shiftdown()
                 if not self.tryfall(shape, segment):
                     self.add(shape, segment)
+                    self.counts[self.height()].append(i)
                     break
 
     def add(self, shape, segment):
@@ -196,14 +198,76 @@ class Chamber:
         print()
 
 
-def solve(lines, count, *args):
-    count = int(count)
+def find_repeated_segment(chamber, nums):
+    pivot = nums[-1]
+    positions = []
+    for index, num in enumerate(nums):
+        if num == pivot:
+            positions.append(index)
+
+    last_index = positions[-1]
+    assert nums[last_index] == pivot
+
+    for index in reversed(positions[:-2]):
+        cycle_length = last_index - index
+        prev_start = index - cycle_length
+        for offset in range(cycle_length):
+            if nums[prev_start + offset] != nums[index + offset]:
+                break
+        else:
+            print(f'found cycle of length={cycle_length}')
+            print(chamber.counts[index-1])
+            print(chamber.counts[index-1 - cycle_length])
+            print(chamber.counts[index-1 - cycle_length * 2])
+            print(chamber.counts[index - cycle_length * 3])
+            print(chamber.counts[index - cycle_length * 4])
+            return cycle_length
+
+    print(f'did not find cycle')
+
+    return
+    counts = Counter()
+    for num in nums:
+        counts[num] += 1
+
+    for v, count in counts.items():
+        print(v, count)
+
+
+def find_count_diff(chamber, cycle_length):
+    index = chamber.height() - 1
+    for offset in range(5):
+        if chamber.counts[index - offset]:
+            index -= offset
+            break
+    else:
+        raise ValueError("could not find count diff")
+
+    count_diff = chamber.counts[index][-1] - chamber.counts[index - cycle_length][-1]
+    print(f"found count diff = {count_diff}")
+
+    return count_diff
+
+
+def solve(lines, count1, count2, *args):
+    count1 = int(count1)
+    count2 = int(count2)
     jets = Jets(lines[0])
     chamber = Chamber(7, 2, jets)
+    chamber.simulate(count1)
+    cycle_length = find_repeated_segment(chamber, chamber.chamber)
+    count_diff = find_count_diff(chamber, cycle_length)
+    height = chamber.height() - 1
+    height += cycle_length * ((count2 - count1) // count_diff - 1)
+    count = count2 - count1 - ((count2 - count1) // count_diff - 1) * count_diff
+
+    height0 = chamber.height()
     chamber.simulate(count)
+    height += chamber.height() - height0
+
     if args:
         chamber.print()
-    return chamber.height() - 1
+    return height
 
 
 def main():
