@@ -143,7 +143,8 @@ def solve(lines, count, *args):
     jets = Jets(lines[0])
     chamber = Chamber(7, 2, jets)
     chamber.simulate(count)
-    chamber.print()
+    if args:
+        chamber.print()
     return chamber.height()
 
 
