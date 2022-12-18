@@ -55,22 +55,21 @@ class Cubes:
     def _compute_enclosure(self):
         filled = set()
 
-        q = deque([(self.min_x, self.min_y, self.min_z)])
-        while q:
-            for _ in range(len(q)):
-                x, y, z = q.popleft()
-                u = x, y, z
-                if u in filled or u in self.cubes:
-                    continue
+        stack = [(self.min_x, self.min_y, self.min_z)]
+        while stack:
+            x, y, z = stack.pop()
+            u = x, y, z
+            if u in filled or u in self.cubes:
+                continue
 
-                if not (self.min_x <= x <= self.max_x
-                        and self.min_y <= y <= self.max_y
-                        and self.min_z <= z <= self.max_z):
-                    continue
+            if not (self.min_x <= x <= self.max_x
+                    and self.min_y <= y <= self.max_y
+                    and self.min_z <= z <= self.max_z):
+                continue
 
-                filled.add(u)
-                for dx, dy, dz in DIRS:
-                    q.append((x + dx, y + dy, z + dz))
+            filled.add(u)
+            for dx, dy, dz in DIRS:
+                stack.append((x + dx, y + dy, z + dz))
 
         return filled
 
