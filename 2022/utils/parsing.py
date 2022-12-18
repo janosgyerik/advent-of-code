@@ -6,9 +6,9 @@ RE_NATNUMS = re.compile(r'(?P<int>\d+)')
 def extract_natural_numbers(s):
     """
     >>> extract_natural_numbers("foo divisible by 3 and 2")
-    [3, 2]
+    (3, 2)
     """
-    return [int(x) for x in RE_NATNUMS.findall(s)]
+    return tuple(int(x) for x in RE_NATNUMS.findall(s))
 
 
 def items_from_template_from_lines(template, lines):
