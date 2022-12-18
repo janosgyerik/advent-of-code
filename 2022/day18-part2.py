@@ -11,6 +11,7 @@ from typing import Callable, List, Set, Tuple
 
 from utils.binary_search import binary_search
 from utils import parsing
+from utils import coordinates
 
 
 def read_lines(path):
@@ -45,8 +46,7 @@ class Cubes:
 
         count = 0
         for x, y, z in self.cubes:
-            for dx, dy, dz in DIRS:
-                v = x + dx, y + dy, z + dz
+            for v in coordinates.neighbors(x, y, z):
                 if v in enclosure:
                     count += 1
 
@@ -68,13 +68,10 @@ class Cubes:
                 continue
 
             filled.add(u)
-            for dx, dy, dz in DIRS:
-                stack.append((x + dx, y + dy, z + dz))
+            for x2, y2, z2 in coordinates.neighbors(x, y, z):
+                stack.append((x2, y2, z2))
 
         return filled
-
-
-DIRS = ((0, 0, 1), (0, 0, -1), (0, 1, 0), (0, -1, 0), (1, 0, 0), (-1, 0, 0))
 
 
 def parse_cubes(lines):
