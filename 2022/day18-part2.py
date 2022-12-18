@@ -55,19 +55,22 @@ class Cubes:
     def _compute_enclosure(self):
         filled = set()
 
-        def fill(x, y, z):
-            u = x, y, z
-            if u in filled or u in self.cubes:
-                return
+        q = deque([(self.min_x, self.min_y, self.min_z)])
+        while q:
+            for _ in range(len(q)):
+                x, y, z = q.popleft()
+                u = x, y, z
+                if u in filled or u in self.cubes:
+                    continue
 
-            if not (self.min_x <= x <= self.max_x and self.min_y <= y <= self.max_y and self.min_z <= z <= self.max_z):
-                return
+                if not (self.min_x <= x <= self.max_x
+                        and self.min_y <= y <= self.max_y
+                        and self.min_z <= z <= self.max_z):
+                    continue
 
-            filled.add(u)
-            for dx, dy, dz in DIRS:
-                fill(x + dx, y + dy, z + dz)
-
-        fill(self.min_x, self.min_y, self.min_z)
+                filled.add(u)
+                for dx, dy, dz in DIRS:
+                    q.append((x + dx, y + dy, z + dz))
 
         return filled
 
@@ -86,7 +89,6 @@ def parse_cubes(lines):
 
 def solve(lines, *args):
     cubes = parse_cubes(lines)
-    sys.setrecursionlimit(15000)
     return cubes.count_open_surfaces()
 
 
