@@ -57,11 +57,11 @@ class Cubes:
 
         stack = [(self.min_x, self.min_y, self.min_z)]
         while stack:
-            x, y, z = stack.pop()
-            u = x, y, z
+            u = stack.pop()
             if u in filled or u in self.cubes:
                 continue
 
+            x, y, z = u
             if not (self.min_x <= x <= self.max_x
                     and self.min_y <= y <= self.max_y
                     and self.min_z <= z <= self.max_z):
@@ -77,8 +77,7 @@ class Cubes:
 def parse_cubes(lines):
     cubes = set()
     for line in lines:
-        x, y, z = parsing.extract_natural_numbers(line)
-        cubes.add((x, y, z))
+        cubes.add(parsing.extract_natural_numbers(line))
 
     return Cubes(cubes)
 
