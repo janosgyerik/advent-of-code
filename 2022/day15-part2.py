@@ -10,15 +10,12 @@ from itertools import product
 from typing import Callable, List
 
 from utils.binary_search import binary_search
+from utils.coordinates import manhattan_distance
 
 
 def read_lines(path):
     with open(path) as fh:
         return [line.rstrip() for line in fh.readlines()]
-
-
-def manhattan_distance(sx, sy, bx, by):
-    return abs(sx - bx) + abs(sy - by)
 
 
 @dataclass

@@ -17,10 +17,6 @@ def read_lines(path):
         return [line.rstrip() for line in fh.readlines()]
 
 
-def manhattan_distance(sx, sy, bx, by):
-    return abs(sx - bx) + abs(sy - by)
-
-
 def parse_valves(lines):
     template = re.compile(r'Valve (..) has flow rate=(\d+); tunnels? leads? to valves? (.+)')
     graph = {}

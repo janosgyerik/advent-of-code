@@ -10,6 +10,7 @@ from itertools import product
 from typing import Callable, List
 
 from utils.binary_search import binary_search
+from utils.coordinates import manhattan_distance
 
 
 def read_lines(path):
@@ -60,12 +61,6 @@ class Sensors:
                     break
 
         return count
-
-
-def manhattan_distance(sx, sy, bx, by):
-    dx = abs(sx - bx)
-    dy = abs(sy - by)
-    return dx + dy
 
 
 def parse_sensors(lines):
