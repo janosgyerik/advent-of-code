@@ -12,11 +12,15 @@ from typing import Callable, List, Set, Tuple
 from utils.binary_search import binary_search
 from utils import parsing
 from utils import coordinates
+from enum import Enum, auto
 
 
 def read_lines(path):
     with open(path) as fh:
         return [line.rstrip() for line in fh.readlines()]
+
+
+MAX_LENGTH = 10
 
 
 @dataclass
@@ -64,6 +68,41 @@ class Blueprint:
         return want_more_ore, want_more_clay, want_more_obsidian
 
 
+class Resource(Enum):
+    ORE = auto()
+    CLAY = auto()
+    OBSIDIAN = auto()
+    GEODE = auto()
+
+
+class Sequence:
+    def __init__(self, code, length):
+        self.code = code
+        self.length = length
+
+    def candidates(self):
+        if self.length == MAX_LENGTH:
+            return
+
+        code = self.code
+        digit = code % 10
+        for prev in reversed(range(digit + 1)):
+            yield Sequence(code * 10 + prev, self.length + 1)
+
+        m = 10
+        suffix = digit
+        code //= 10
+        while code:
+            digit = code % 10
+            for d in reversed(range(digit + 1)):
+                candidate = (code * 10 + d) * m + suffix
+                yield Sequence(candidate, self.length + 1)
+
+            suffix = digit * m + suffix
+            code //= 10
+            m *= 10
+
+
 @dataclass
 class RobotFactory:
     blueprint: Blueprint
@@ -77,75 +116,121 @@ class RobotFactory:
     geode_robot: int = 0
 
     def work(self, minutes):
-        bp = self.blueprint
+        # Resource.CLAY,
+        # Resource.CLAY,
+        # Resource.CLAY,
+        # Resource.OBSIDIAN,
+        # Resource.CLAY,
+        # Resource.OBSIDIAN,
+        # Resource.GEODE,
+        # Resource.GEODE,
 
-        resources0 = (0, 0, 0, 0)
-        robots0 = (1, 0, 0, 0)
-
-        q = deque([(1, resources0, robots0)])
-        max_geodes = 0
+        start = Sequence(321, 3)
+        start_geodes = self.mine(minutes, start)
+        q = deque([(start, start_geodes)])
+        seen = set()
+        max_geodes = start_geodes
 
         while q:
-            # print(q[0])
-            m, res, robs = q.popleft()
-            ore, clay, obsidian, geode = res
-            r_ore, r_clay, r_obsidian, r_geode = robs
+            seq, geodes = q.popleft()
+            for candidate in seq.candidates():
+                if candidate.code in seen:
+                    continue
 
-            # if geode == 1:
-            #     print(m, res, robs)
-            if geode > max_geodes:
-                print(m, res, robs)
-                max_geodes = geode
-                self.ore, self.clay, self.obsidian, self.geode = res
+                seen.add(candidate.code)
+                candidate_geodes = self.mine(minutes, candidate)
+                if geodes <= candidate_geodes:
+                    q.append((candidate, candidate_geodes))
 
-            if m == minutes:
-                break
+                    if max_geodes < candidate_geodes:
+                        max_geodes = candidate_geodes
+                        # 11121233
+                        print(candidate.code, max_geodes)
 
-            # want_more_ore, want_more_clay, want_more_obsidian = bp.want_more(r_ore, r_clay, r_obsidian)
-            want_more_ore = r_ore < bp.geode_cost_ore
-            want_more_clay = False
-            want_more_obsidian = r_obsidian < bp.geode_cost_obsidian
+        return max_geodes
 
-            if want_more_obsidian:
-                want_more_ore |= r_ore < bp.obsidian_cost_ore
-                want_more_clay = r_clay < bp.obsidian_cost_clay
+    def mine(self, minutes, sequence, debug=False):
+        self.ore = 0
+        self.clay = 0
+        self.obsidian = 0
+        self.geode = 0
+        self.ore_robot = 1
+        self.clay_robot = 0
+        self.obsidian_robot = 0
+        self.geode_robot = 0
 
-                if want_more_clay:
-                    want_more_ore |= r_ore < bp.clay_cost
+        m = [Resource.ORE, Resource.CLAY, Resource.OBSIDIAN, Resource.GEODE]
 
-            if ore >= bp.geode_cost_ore and obsidian >= bp.geode_cost_obsidian:
-                robots2 = r_ore, r_clay, r_obsidian, r_geode + 1
-                res3 = ore + r_ore - bp.geode_cost_ore, clay + r_clay, obsidian + r_obsidian - bp.geode_cost_obsidian, geode + r_geode
-                q.append((m + 1, res3, robots2))
+        def gen():
+            code = sequence.code
+            while code:
+                yield code % 10
+                code //= 10
 
-                # greedy
-                ore -= bp.geode_cost_ore
-                obsidian -= bp.geode_cost_obsidian
+        it = (m[x] for x in gen())
+        target = next(it)
 
-            if want_more_obsidian and ore >= bp.obsidian_cost_ore and clay >= bp.obsidian_cost_clay:
-                robots2 = r_ore, r_clay, r_obsidian + 1, r_geode
-                res3 = ore + r_ore - bp.obsidian_cost_ore, clay + r_clay - bp.obsidian_cost_clay, obsidian + r_obsidian, geode + r_geode
-                q.append((m + 1, res3, robots2))
+        for i in range(minutes):
+            if self.can_build(target):
+                self.build(target)
+                self.discount(target)
+                try:
+                    target = next(it)
+                except StopIteration:
+                    target = None
 
-                # greedy
-                ore -= bp.obsidian_cost_ore
-                clay -= bp.obsidian_cost_clay
+            self.ore += self.ore_robot
+            self.clay += self.clay_robot
+            self.obsidian += self.obsidian_robot
+            self.geode += self.geode_robot
+            if debug:
+                print(f"{i:>2}:", f"{self.ore:>3}", f"{self.clay:>3}", f"{self.obsidian:>3}", f"{self.geode:>3}", '--',
+                      self.ore_robot, self.clay_robot, self.obsidian_robot, self.geode_robot)
 
-            if want_more_clay and ore >= bp.clay_cost:
-                robots2 = r_ore, r_clay + 1, r_obsidian, r_geode
-                res3 = ore + r_ore - bp.clay_cost, clay + r_clay, obsidian + r_obsidian, geode + r_geode
-                q.append((m + 1, res3, robots2))
+        return self.geode
 
-                # greedy -> fast but incorrect result
-                # ore -= bp.clay_cost
+    def can_build(self, target):
+        bp = self.blueprint
+        match target:
+            case None:
+                return False
+            case Resource.ORE:
+                return self.ore >= bp.ore_cost
+            case Resource.CLAY:
+                return self.ore >= bp.clay_cost
+            case Resource.OBSIDIAN:
+                return self.ore >= bp.obsidian_cost_ore and self.clay >= bp.obsidian_cost_clay
+            case Resource.GEODE:
+                return self.ore >= bp.geode_cost_ore and self.obsidian >= bp.geode_cost_obsidian
 
-            if want_more_ore and ore >= bp.ore_cost:
-                robots2 = r_ore + 1, r_clay, r_obsidian, r_geode
-                res3 = ore + r_ore - bp.ore_cost, clay + r_clay, obsidian + r_obsidian, geode + r_geode
-                q.append((m + 1, res3, robots2))
+    def build(self, target):
+        bp = self.blueprint
+        match target:
+            case Resource.ORE:
+                self.ore -= bp.ore_cost
+                self.ore_robot += 1
+            case Resource.CLAY:
+                self.ore -= bp.clay_cost
+                self.clay_robot += 1
+            case Resource.OBSIDIAN:
+                self.ore -= bp.obsidian_cost_ore
+                self.clay -= bp.obsidian_cost_clay
+                self.obsidian_robot += 1
+            case Resource.GEODE:
+                self.ore -= bp.geode_cost_ore
+                self.obsidian -= bp.geode_cost_obsidian
+                self.geode_robot += 1
 
-            res2 = ore + r_ore, clay + r_clay, obsidian + r_obsidian, geode + r_geode
-            q.append((m + 1, res2, robs))
+    def discount(self, target):
+        match target:
+            case Resource.ORE:
+                self.ore -= 1
+            case Resource.CLAY:
+                self.clay -= 1
+            case Resource.OBSIDIAN:
+                self.obsidian -= 1
+            case Resource.GEODE:
+                self.geode -= 1
 
 
 @dataclass
@@ -157,8 +242,11 @@ class Blueprints:
 
         for bp in self.blueprints:
             factory = RobotFactory(bp)
-            factory.work(minutes)
-            count += factory.geode * bp.id_
+            max_geodes = factory.work(minutes)
+            count0 = max_geodes * bp.id_
+            xaa = 'x' + chr(ord('a') + (bp.id_ - 1) // 26) + chr(ord('a') + (bp.id_ - 1) % 26)
+            print(f"{xaa}: {bp.id_} * {max_geodes} = {count0}")
+            count += count0
 
         return count
 
@@ -187,6 +275,16 @@ def parse_blueprints(lines):
 def solve(lines, minutes, *args):
     minutes = int(minutes)
     blueprints = parse_blueprints(lines)
+    if args:
+        seq_spec = args[0]
+        seq = Sequence(int(seq_spec), len(seq_spec))
+        bp = blueprints.blueprints[0]
+        print(bp)
+        factory = RobotFactory(bp)
+        max_geodes = factory.mine(minutes, seq, debug=True)
+        print("max=", max_geodes, seq_spec)
+        return
+
     return blueprints.compute_total_quality(minutes)
 
 
