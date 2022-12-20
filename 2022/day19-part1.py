@@ -20,7 +20,7 @@ def read_lines(path):
         return [line.rstrip() for line in fh.readlines()]
 
 
-MAX_LENGTH = 10
+MAX_LENGTH = 14
 
 
 @dataclass
@@ -127,6 +127,25 @@ class RobotFactory:
 
         start = Sequence(321, 3)
         start_geodes = self.mine(minutes, start)
+
+        seen = set()
+
+        def dfs(seq, geodes):
+            max_geodes = geodes
+
+            for candidate in seq.candidates():
+                if candidate.code in seen:
+                    continue
+
+                seen.add(candidate.code)
+                candidate_geodes = self.mine(minutes, candidate)
+                if geodes <= candidate_geodes:
+                    max_geodes = max(max_geodes, dfs(candidate, candidate_geodes))
+
+            return max_geodes
+
+        return dfs(start, start_geodes)
+
         q = deque([(start, start_geodes)])
         seen = set()
         max_geodes = start_geodes
