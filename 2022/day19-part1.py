@@ -9,6 +9,8 @@ from heapq import heappush, heappop, heapify
 from itertools import product
 from typing import Callable, List, Set, Tuple
 
+import math
+
 from utils.binary_search import binary_search
 from utils import parsing
 from utils import coordinates
@@ -21,9 +23,10 @@ def read_lines(path):
 
 
 MAX_LENGTH = 14
+MAX_LENGTH = 10
 
 
-@dataclass
+@dataclass(frozen=True)
 class Blueprint:
     id_: int
     ore_cost: int
@@ -66,6 +69,223 @@ class Blueprint:
                 want_more_ore |= r_ore < self.clay_cost
 
         return want_more_ore, want_more_clay, want_more_obsidian
+
+    def compute_max_geodes(self, minutes):
+        print(Blueprint(1, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 20, 10))
+        return 0
+        for count in range(1, 13):
+            print(count, self.can_have_resources(Resource.GEODE, count, minutes))
+        best = 0
+        left = 1
+        right = 172
+        while left < right:
+            mid = left + (right - left) // 2
+            if self.can_have_resources(Resource.GEODE, mid, minutes):
+                best = max(best, mid)
+                left = mid + 1
+            else:
+                right = mid
+
+        return best
+
+    @lru_cache(maxsize=None)
+    def can_have_resources(self, resource, count, minutes):
+        """
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 1, 0)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 1, 1)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 2, 2)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 4, 4)
+        True
+
+        note: this is possible by not producing a robot in the round just before
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 5, 4)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 6, 4)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 7, 5)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 8, 5)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 9, 5)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 11, 6)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 12, 6)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 13, 6)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 16, 7)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 17, 7)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 18, 7)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 22, 8)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 23, 8)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_resources(Resource.ORE, 24, 8)
+        False
+
+        >>> Blueprint(0, 4, 2, 3, 14, 2, 7).can_have_resources(Resource.GEODE, 9, 24)
+        True
+
+        TODO: this should pass; the program seems to believe it can continue
+        >>> Blueprint(0, 4, 2, 3, 14, 2, 7).can_have_resources(Resource.GEODE, 10, 24)
+        False
+
+        TODO: drop this redundant test
+        >>> Blueprint(0, 4, 2, 3, 14, 2, 7).can_have_resources(Resource.GEODE, 18, 24)
+        False
+
+        >>> Blueprint(0, 2, 3, 3, 8, 3, 12).can_have_resources(Resource.GEODE, 12, 24)
+        True
+
+        TODO: this should pass; the program seems to believe it can continue
+        >>> Blueprint(0, 2, 3, 3, 8, 3, 12).can_have_resources(Resource.GEODE, 13, 24)
+        False
+
+        TODO: drop this redundant test
+        >>> Blueprint(0, 2, 3, 3, 8, 3, 12).can_have_resources(Resource.GEODE, 18, 24)
+        False
+
+        """
+        assert count > 0
+        assert minutes >= 0
+
+        if minutes == 0:
+            return False
+
+        '''
+        how can we have the required resources?
+        they must have been produced.
+        
+        how could they have been produced?
+        - by 1 robot, 1 per minute since count minutes, if feasible
+            - or 1 per minute since count-1 minutes if there was 1 resource
+            - or 1 per minute since count-2 minutes if there was 2 resource
+            - ...
+        - by 2 robots, 2 per minute some minutes ago, if feasible
+        - by count robots, count in the last minute, if feasible
+        '''
+
+        for robots in range(1, count + 1):
+            '''
+            1 robot to produce N ->
+                t-1: N-1 resources and 1 robot
+                t-2: N-2 resources and 1 robot
+                ...
+                t-N: 1 robot
+                
+            2 robots to produce N ->
+                t-1: N-2 resources and 2 robots
+                t-2: N-4 resources and 2 robots
+                ...
+                t-d: 2 robots
+            '''
+            duration = math.ceil(count / robots)
+            count2 = count
+
+            for dt in range(1, duration + 1):
+                minutes2 = minutes - dt
+                if minutes2 < 0:
+                    break
+
+                count2 -= robots
+                if count2 <= 0:
+                    if self.can_have_robots(resource, robots, minutes2):
+                        return True
+                else:
+                    if (self.can_have_robots(resource, robots, minutes2)
+                            and self.can_have_resources(resource, count2, minutes2)):
+                        return True
+
+        return False
+
+    @lru_cache(maxsize=None)
+    def can_have_robots(self, resource, count, minutes):
+        """
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_robots(Resource.ORE, 1, 0)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_robots(Resource.ORE, 2, 0)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_robots(Resource.ORE, 2, 1)
+        True
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_robots(Resource.ORE, 3, 1)
+        False
+
+        >>> Blueprint(0, 1, 1, 1, 1, 1, 1).can_have_robots(Resource.ORE, 3, 2)
+        True
+        """
+        assert count > 0
+        assert minutes >= 0
+
+        if minutes == 0:
+            return resource == Resource.ORE and count == 1
+
+        '''
+        how can we have the required robots?
+        they must have been produced.
+
+        how could they have been produced?
+        - we had the count - 1 in the previous round, and enough resources to make one
+        '''
+
+        if count == 1:
+            if resource == Resource.ORE:
+                return True
+
+            if resource == Resource.CLAY:
+                return self.can_have_resources(Resource.ORE, self.clay_cost, minutes - 1)
+
+            if resource == Resource.OBSIDIAN:
+                return (self.can_have_resources(Resource.ORE, self.obsidian_cost_ore, minutes - 1)
+                        and self.can_have_resources(Resource.CLAY, self.obsidian_cost_clay, minutes - 1))
+
+            if resource == Resource.GEODE:
+                return (self.can_have_resources(Resource.ORE, self.geode_cost_ore, minutes - 1)
+                        and self.can_have_resources(Resource.OBSIDIAN, self.geode_cost_obsidian, minutes - 1))
+
+        if not self.can_have_robots(resource, count - 1, minutes - 1):
+            return False
+
+        if resource == Resource.ORE:
+            return self.can_have_resources(Resource.ORE, self.ore_cost * count, minutes - 1)
+
+        if resource == Resource.CLAY:
+            return self.can_have_resources(Resource.ORE, self.clay_cost * count, minutes - 1)
+
+        if resource == Resource.OBSIDIAN:
+            return (self.can_have_resources(Resource.ORE, self.obsidian_cost_ore * count, minutes - 1)
+                    and self.can_have_resources(Resource.CLAY, self.obsidian_cost_clay * count, minutes - 1))
+
+        if resource == Resource.GEODE:
+            return (self.can_have_resources(Resource.ORE, self.geode_cost_ore * count, minutes - 1)
+                    and self.can_have_resources(Resource.OBSIDIAN, self.geode_cost_obsidian * count, minutes - 1))
+
+        return False
 
 
 class Resource(Enum):
@@ -209,47 +429,52 @@ class RobotFactory:
         return self.geode
 
     def can_build(self, target):
+        if target is None:
+            return False
+
         bp = self.blueprint
-        match target:
-            case None:
-                return False
-            case Resource.ORE:
-                return self.ore >= bp.ore_cost
-            case Resource.CLAY:
-                return self.ore >= bp.clay_cost
-            case Resource.OBSIDIAN:
-                return self.ore >= bp.obsidian_cost_ore and self.clay >= bp.obsidian_cost_clay
-            case Resource.GEODE:
-                return self.ore >= bp.geode_cost_ore and self.obsidian >= bp.geode_cost_obsidian
+
+        if target == Resource.ORE:
+            return self.ore >= bp.ore_cost
+
+        if target == Resource.CLAY:
+            return self.ore >= bp.clay_cost
+
+        if target == Resource.OBSIDIAN:
+            return self.ore >= bp.obsidian_cost_ore and self.clay >= bp.obsidian_cost_clay
+
+        if target == Resource.GEODE:
+            return self.ore >= bp.geode_cost_ore and self.obsidian >= bp.geode_cost_obsidian
 
     def build(self, target):
         bp = self.blueprint
-        match target:
-            case Resource.ORE:
-                self.ore -= bp.ore_cost
-                self.ore_robot += 1
-            case Resource.CLAY:
-                self.ore -= bp.clay_cost
-                self.clay_robot += 1
-            case Resource.OBSIDIAN:
-                self.ore -= bp.obsidian_cost_ore
-                self.clay -= bp.obsidian_cost_clay
-                self.obsidian_robot += 1
-            case Resource.GEODE:
-                self.ore -= bp.geode_cost_ore
-                self.obsidian -= bp.geode_cost_obsidian
-                self.geode_robot += 1
+        if target == Resource.ORE:
+            self.ore -= bp.ore_cost
+            self.ore_robot += 1
+
+        elif target == Resource.CLAY:
+            self.ore -= bp.clay_cost
+            self.clay_robot += 1
+
+        elif target == Resource.OBSIDIAN:
+            self.ore -= bp.obsidian_cost_ore
+            self.clay -= bp.obsidian_cost_clay
+            self.obsidian_robot += 1
+
+        elif target == Resource.GEODE:
+            self.ore -= bp.geode_cost_ore
+            self.obsidian -= bp.geode_cost_obsidian
+            self.geode_robot += 1
 
     def discount(self, target):
-        match target:
-            case Resource.ORE:
-                self.ore -= 1
-            case Resource.CLAY:
-                self.clay -= 1
-            case Resource.OBSIDIAN:
-                self.obsidian -= 1
-            case Resource.GEODE:
-                self.geode -= 1
+        if target == Resource.ORE:
+            self.ore -= 1
+        elif target == Resource.CLAY:
+            self.clay -= 1
+        elif target == Resource.OBSIDIAN:
+            self.obsidian -= 1
+        elif target == Resource.GEODE:
+            self.geode -= 1
 
 
 @dataclass
@@ -261,7 +486,7 @@ class Blueprints:
 
         for bp in self.blueprints:
             factory = RobotFactory(bp)
-            max_geodes = factory.work(minutes)
+            max_geodes = bp.compute_max_geodes(minutes)
             count0 = max_geodes * bp.id_
             xaa = 'x' + chr(ord('a') + (bp.id_ - 1) // 26) + chr(ord('a') + (bp.id_ - 1) % 26)
             print(f"{xaa}: {bp.id_} * {max_geodes} = {count0}")
