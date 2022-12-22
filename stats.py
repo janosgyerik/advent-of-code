@@ -62,7 +62,9 @@ def format_time(t):
 
 
 def print_stats(diffs, times):
-    for day in range(1, len(diffs) + 1):
+    for day in range(1, 26):
+        if day not in times:
+            continue
         print_heading(f'Day {day}: Top {TOP*2} submissions')
         rank = 1
         for t, part, name in times[day][:TOP*2]:
@@ -80,7 +82,9 @@ def print_stats(diffs, times):
 
 def print_average_speed(diffs):
     ranks = defaultdict(list)
-    for day in range(1, len(diffs) + 1):
+    for day in range(1, 26):
+        if day not in diffs:
+            continue
         rank = 1
         for dt, name in diffs[day]:
             ranks[name].append(rank)
