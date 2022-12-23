@@ -155,6 +155,22 @@ class State:
     def geodes_plus_robots(self):
         return self.resources[-1] + self.robots[-1]
 
+    def is_inferior(self, other):
+        for i in range(4):
+            if self.robots[i] > other.robots[i]:
+                return False
+        for i in range(4):
+            if self.resources[i] > other.resources[i]:
+                return False
+        for i in range(4):
+            if self.robots[i] < other.robots[i]:
+                return True
+        for i in range(4):
+            if self.resources[i] < other.resources[i]:
+                return True
+
+        assert False, 'Unexpected duplicates!'
+
 
 def compute_max_geodes(blueprint, minutes):
     """
@@ -166,16 +182,31 @@ def compute_max_geodes(blueprint, minutes):
     To find the maximum geodes we can have, we explore reachable states in 24 steps.
     Some states are clearly inferior to others and should not be explored.
     """
-    q = [State()]
+    q = {State()}
     for minute in range(minutes - 1):
-        print(minute, len(q))
-        q2 = []
+        # print(minute, len(q))
+        q2 = set()
         for s in q:
             for s2 in s.choices(blueprint):
-                q2.append(s2)
+                q2.add(s2)
 
-        # TODO filter q2, excluding poor choices
-        q = q2
+        by_robots = defaultdict(list)
+        for s in q2:
+            by_robots[s.robots].append(s)
+
+        q.clear()
+        for robots, states in by_robots.items():
+            states = sorted(states, key=lambda s: s.robots)
+
+            for i1, s1 in enumerate(states):
+                for i2 in range(i1 + 1, len(states)):
+                    s2 = states[i2]
+                    if s1.is_inferior(s2):
+                        break
+                else:
+                    q.add(s1)
+
+            q.add(states[-1])
 
     max_geodes = 0
     for s in q:
@@ -194,6 +225,7 @@ class Blueprints:
         for bp in self.blueprints:
             max_geodes = compute_max_geodes(bp, minutes)
             count = max_geodes * bp.id_
+            print(bp.id_, max_geodes)
             total += count
 
         return total

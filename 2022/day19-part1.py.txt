@@ -52,6 +52,14 @@ no change, probably not reached!
 
 time to 20 without filtering out building too many robots: 19.15s
 time to 20 with filtering out building too many robots: 14.36s
+time to 20 with filtering out inferior paths: TODO
+
+14 3294
+15 5660
+16 9491
+0
+./day19-part1.py a 18  17.89s use
+
 
 input data analysis
 
