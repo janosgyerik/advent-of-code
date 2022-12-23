@@ -176,6 +176,9 @@ def compute_max_geodes(blueprint, minutes):
                 if s2.robots[1] > blueprint.clay_robot_limit:
                     continue
 
+                if s2.robots[2] > blueprint.obsidian_robot_limit:
+                    continue
+
                 q2.append(s2)
 
         # TODO filter q2, excluding poor choices

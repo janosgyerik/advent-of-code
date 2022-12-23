@@ -47,6 +47,9 @@ filter out not building any when there are enough resources
 18 889704
 19 2828366
 
+filter out building too many obsidian robots
+no change, probably not reached!
+
 input data analysis
 
 ore needs between 2 and 4
