@@ -82,13 +82,15 @@ class State:
         else:
             yield State(tuple(x + r for x, r in zip(self.resources, self.robots)), self.robots)
 
-        if self.resources[0] >= blueprint.ore_cost:
+        if self.robots[0] < blueprint.ore_robot_limit and self.resources[0] >= blueprint.ore_cost:
             yield State(self.used(0, blueprint.ore_cost), self.built(0))
 
-        if self.resources[0] >= blueprint.clay_cost:
+        if self.robots[1] < blueprint.clay_robot_limit and self.resources[0] >= blueprint.clay_cost:
             yield State(self.used(0, blueprint.clay_cost), self.built(1))
 
-        if self.resources[0] >= blueprint.obsidian_cost_ore and self.resources[1] >= blueprint.obsidian_cost_clay:
+        if (self.robots[2] < blueprint.obsidian_robot_limit
+                and self.resources[0] >= blueprint.obsidian_cost_ore
+                and self.resources[1] >= blueprint.obsidian_cost_clay):
             yield State(self.used2(blueprint.obsidian_cost_ore, 1, blueprint.obsidian_cost_clay), self.built(2))
 
         if self.resources[0] >= blueprint.geode_cost_ore and self.resources[2] >= blueprint.geode_cost_obsidian:
@@ -170,15 +172,6 @@ def compute_max_geodes(blueprint, minutes):
         q2 = []
         for s in q:
             for s2 in s.choices(blueprint):
-                if s2.robots[0] > blueprint.ore_robot_limit:
-                    continue
-
-                if s2.robots[1] > blueprint.clay_robot_limit:
-                    continue
-
-                if s2.robots[2] > blueprint.obsidian_robot_limit:
-                    continue
-
                 q2.append(s2)
 
         # TODO filter q2, excluding poor choices

@@ -50,6 +50,9 @@ filter out not building any when there are enough resources
 filter out building too many obsidian robots
 no change, probably not reached!
 
+time to 20 without filtering out building too many robots: 19.15s
+time to 20 with filtering out building too many robots: 14.36s
+
 input data analysis
 
 ore needs between 2 and 4
