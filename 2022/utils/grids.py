@@ -48,6 +48,16 @@ class Grid:
         for row in self.grid:
             print_fn(to_line_fn(row))
 
+    def padded(self, value, count):
+        padding_side = [value] * count
+        padding_full = padding_side + [value] * self.cols + padding_side
+        padding_top = [padding_full for _ in range(count)]
+        copy = padding_top.copy()
+        for row in self:
+            copy.append(padding_side + row + padding_side)
+        copy.extend(padding_top)
+        return Grid(copy)
+
 
 class GridIter:
     def __init__(self, grid):
