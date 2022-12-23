@@ -71,6 +71,14 @@ class State:
               and self.resources[0] >= blueprint.obsidian_cost_ore
               and self.resources[0] >= blueprint.obsidian_cost_clay):
             pass
+        elif (not self.robots[3]
+              and self.resources[0] >= blueprint.ore_cost
+              and self.resources[0] >= blueprint.clay_cost
+              and self.resources[0] >= blueprint.obsidian_cost_ore
+              and self.resources[0] >= blueprint.obsidian_cost_clay
+              and self.resources[0] >= blueprint.geode_cost_ore
+              and self.resources[0] >= blueprint.geode_cost_obsidian):
+            pass
         else:
             yield State(tuple(x + r for x, r in zip(self.resources, self.robots)), self.robots)
 
