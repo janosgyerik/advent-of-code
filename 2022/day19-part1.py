@@ -63,8 +63,11 @@ class State:
     robots: Tuple = (1, 0, 0, 0)
 
     def choices(self, blueprint):
-        yield State(tuple(x + r for x, r in zip(self.resources, self.robots)), self.robots)
-        
+        if not self.robots[1] and self.resources[0] >= blueprint.ore_cost and self.resources[0] >= blueprint.clay_cost:
+            pass
+        else:
+            yield State(tuple(x + r for x, r in zip(self.resources, self.robots)), self.robots)
+
         if self.resources[0] >= blueprint.ore_cost:
             yield State(self.used(0, blueprint.ore_cost), self.built(0))
             
@@ -149,7 +152,7 @@ def compute_max_geodes(blueprint, minutes):
     """
     q = [State()]
     for minute in range(minutes - 1):
-        print(minute, len(q), q[0])
+        print(minute, len(q))
         q2 = []
         for s in q:
             for s2 in s.choices(blueprint):

@@ -1,3 +1,12 @@
+ideas
+
+- filter out branches that are known to not lead to optimal solution
+    - resources, robots << resources2, robots2
+    - not building for no good reason
+        - when no clay robots, not building ore or clay even though it's possible
+        - ...
+- represent state with a single number to drastically reduce storage
+
 building just ore and clay robots,
 the q size gets to 1153738 in 19 iterations, 16 seconds
 
@@ -17,28 +26,16 @@ producing normally, using frozen State
 23m -- didn't wait
 
 q size progression
-0 1
-1 1
-2 1
-3 2
-4 3
-5 7
-6 12
-7 29
-8 57
-9 143
-10 320
-11 843
-12 2163
-13 5967
-14 16873
-15 49988
-16 153935
 17 484377
 18 1558922
 19 5094733
 20 16870902
 21 57261429
+
+filter out not building ore or clay when there are enough resources
+17 292232
+18 952115
+19 3144380
 
 
 input data analysis
