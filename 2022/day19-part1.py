@@ -22,7 +22,7 @@ def read_lines(path):
         return [line.rstrip() for line in fh.readlines()]
 
 
-@dataclass(frozen=True)
+@dataclass()
 class Blueprint:
     id_: int
     ore_cost: int
@@ -31,6 +31,15 @@ class Blueprint:
     obsidian_cost_clay: int
     geode_cost_ore: int
     geode_cost_obsidian: int
+
+    ore_robot_limit: int = field(init=False)
+    clay_robot_limit: int = field(init=False)
+    obsidian_robot_limit: int = field(init=False)
+
+    def __post_init__(self):
+        self.ore_robot_limit = max(self.ore_cost, self.clay_cost, self.obsidian_cost_ore, self.geode_cost_ore)
+        self.clay_robot_limit = self.obsidian_cost_clay
+        self.obsidian_robot_limit = self.geode_cost_obsidian
 
 
 class Resource(Enum):
@@ -111,6 +120,12 @@ def compute_max_geodes(blueprint, minutes):
         q2 = []
         for s in q:
             for s2 in s.choices(blueprint):
+                if s2.robots[0] > blueprint.ore_robot_limit:
+                    continue
+
+                if s2.robots[1] > blueprint.clay_robot_limit:
+                    continue
+
                 q2.append(s2)
 
             max_geodes = max(max_geodes, s.geodes)
