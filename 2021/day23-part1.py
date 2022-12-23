@@ -1,15 +1,17 @@
 #!/usr/bin/env python
+import itertools
+import sys
+
 import math
 from numbers import Number
 from typing import Callable, Any
 
-import utils
+from utils import graphs
 import re
 from collections import namedtuple, Counter, deque, defaultdict
 from itertools import product
 from heapq import heappush, heappop, heapify
 from functools import lru_cache
-import utils
 
 
 def parse_state(lines):
@@ -32,6 +34,10 @@ def to_letter(num):
 def to_num(letter):
     assert 'A' <= letter <= 'D'
     return ord(letter) - ord('A') + 1
+
+
+def copy_2d(grid):
+    return [row[:] for row in grid]
 
 
 class State:
@@ -58,19 +64,21 @@ class State:
         print()
 
     def __hash__(self):
-        state = self.hallway[:]
-        for room in self.rooms:
-            if len(room) == 0:
-                state += [0, 0]
-            elif len(room) == 1:
-                state += [0] + room
-            else:
-                state += room
-
         h = 0
-        for x in state:
+        for x in self.hallway:
             h *= 5
             h += x
+
+        for room in self.rooms:
+            if len(room) == 0:
+                h *= 5 * 5
+            elif len(room) == 1:
+                h *= 5 * 5
+                h += room[0]
+            else:
+                for x in room:
+                    h *= 5
+                    h += x
 
         return h
 
@@ -172,7 +180,7 @@ class State:
         return abs(room_hallway_pos - hallway_pos) + 2 - len(self.rooms[room_id])
 
     def copy(self):
-        rooms = utils.copy_2d(self.rooms)
+        rooms = copy_2d(self.rooms)
         copy = State(rooms)
         copy.hallway = self.hallway[:]
         return copy
@@ -195,54 +203,59 @@ class State:
         return copy
 
 
-class Memo:
-    def __init__(self):
-        self.memo = {}
+def create_graph(start):
+    g = graphs.Graph()
+    weights = {}
 
-    def adj(self, state):
-        if state not in self.memo:
-            adj = state.adj()
-            self.memo[state] = adj
+    ids = {}
 
-        return self.memo[state]
+    def get_or_create_id(x):
+        if x in ids:
+            return ids[x]
 
+        ids[x] = len(ids)
 
-def dijkstra(start, end):
-    dist = {start: 0}
+    def dfs(u):
+        if u in seen:
+            return
 
-    pq = utils.PriorityQueue()
-    pq.add_or_update(start, 0)
+        seen.add(u)
+        uid = get_or_create_id(u)
+        for v, weight in u.adj():
+            vid = get_or_create_id(v)
+            # weights[uid, vid] = weight
+            # g.connect(uid, vid)
+            weights[u, v] = weight
+            g.connect(u, v)
+            dfs(v)
 
-    done = set()
-
-    graph = Memo()
-
-    while pq:
-        u = pq.pop()
-        if u == end:
-            break
-
-        done.add(u)
-
-        for v, weight in graph.adj(u):
-            if v in done:
-                continue
-
-            alt = dist[u] + weight
-            if alt < dist.get(v, float('inf')):
-                dist[v] = alt
-                pq.add_or_update(v, alt)
-
-    return dist[end]
+    seen = set()
+    dfs(start)
+    return g, weights, ids
 
 
 def solve(lines):
     state = parse_state(lines)
     state.print()
 
+    g, weights, ids = create_graph(state)
+
     target = State([[1, 1], [2, 2], [3, 3], [4, 4]])
-    return dijkstra(state, target)
+    # return graphs.dijkstra(g, state, target, lambda a, b: weights[a, b])
+    return graphs.dijkstra(g, state, target, lambda a, b: weights.get((a, b), float('inf')))
+    # return graphs.dijkstra(g, ids[state], ids[target], lambda a, b: weights.get((a, b), float('inf')))
+    # return graphs.dijkstra(g, ids[state], ids[target], lambda a, b: weights[a, b])
+
+
+def read_lines(path):
+    with open(path) as fh:
+        return [line.rstrip() for line in fh.readlines()]
+
+
+def main():
+    lines = read_lines(sys.argv[1])
+    print(solve(lines))
 
 
 if __name__ == '__main__':
-    utils.solve(solve)
+    main()
