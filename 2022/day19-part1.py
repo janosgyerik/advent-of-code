@@ -65,12 +65,18 @@ class State:
     def choices(self, blueprint):
         if not self.robots[1] and self.resources[0] >= blueprint.ore_cost and self.resources[0] >= blueprint.clay_cost:
             pass
+        elif (not self.robots[2]
+              and self.resources[0] >= blueprint.ore_cost
+              and self.resources[0] >= blueprint.clay_cost
+              and self.resources[0] >= blueprint.obsidian_cost_ore
+              and self.resources[0] >= blueprint.obsidian_cost_clay):
+            pass
         else:
             yield State(tuple(x + r for x, r in zip(self.resources, self.robots)), self.robots)
 
         if self.resources[0] >= blueprint.ore_cost:
             yield State(self.used(0, blueprint.ore_cost), self.built(0))
-            
+
         if self.resources[0] >= blueprint.clay_cost:
             yield State(self.used(0, blueprint.clay_cost), self.built(1))
 

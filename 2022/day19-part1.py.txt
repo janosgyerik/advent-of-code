@@ -37,6 +37,11 @@ filter out not building ore or clay when there are enough resources
 18 952115
 19 3144380
 
+filter out not building ore or clay or obsidian when there are enough resources
+17 282012
+18 901612
+19 2926288
+
 
 input data analysis
 
