@@ -1,0 +1,129 @@
+building just ore and clay robots,
+the q size gets to 1153738 in 19 iterations, 16 seconds
+
++ stop building ore and clay when production is maxed
+-> q size is greatly reduced to 621636, 10 seconds
+
+it's crucial to not add all possibilities at the last minute
+-> special treatment for last iteration:
+    do not produce robots
+    compute just the final production of geodes
+
+producing normally, using frozen State
+19m -- 7.94s
+20m -- 26.94s
+21m -- 92.34s
+22m -- 317.35s
+23m -- didn't wait
+
+q size progression
+0 1
+1 1
+2 1
+3 2
+4 3
+5 7
+6 12
+7 29
+8 57
+9 143
+10 320
+11 843
+12 2163
+13 5967
+14 16873
+15 49988
+16 153935
+17 484377
+18 1558922
+19 5094733
+20 16870902
+21 57261429
+
+
+input data analysis
+
+ore needs between 2 and 4
+clay needs between 5 and 20, median 16
+obsidian needs between 7 and 20, median 11
+
+with all costs = 1, we could build 20 machines, not more,
+and would have 171 geodes
+
+the cheapest geode robot:
+2  2  2  15  2  7
+
+b
+323322322212121111100
+11
+b 24 3332322122121111100 -> 12 = optimal
+max= 11 33333333333333333333222221111100
+max= 11 333333333333333333332222211111100
+max= 11 3333333333333333333322222211111100
+
+974 is too low as answer; from data:
+3	3
+0	0
+0	0
+1	1
+3	6
+1	1
+0	0
+0	2
+1	1
+2	2
+10	9
+2	3
+4	7
+0	0
+1	1
+1	3
+1	1
+2	3
+0	0
+0	0
+0	0
+1	2
+0	0
+4	7
+1	2
+1	2
+0	1
+0	0
+5	6
+0	0
+
+1077 is too low; from data:
+1 3
+2 0
+3 0
+4 1
+5 6
+6 1
+7 0
+8 2
+9 1
+10 2
+11 15
+12 3
+13 7
+14 0
+15 1
+16 3
+17 1
+18 3
+19 0
+20 0
+21 0
+22 2
+23 0
+24 9
+25 2
+26 2
+27 1
+28 0
+29 6
+30 0
+1500 guess too high :-)
+1300 guess is not correct, and doesnt say anymore if high or low :-)
+not 1105

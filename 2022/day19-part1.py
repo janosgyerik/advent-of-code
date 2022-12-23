@@ -71,8 +71,15 @@ class State:
         if self.resources[0] >= blueprint.clay_cost:
             yield State(self.used(0, blueprint.clay_cost), self.built(1))
 
+        if self.resources[0] >= blueprint.obsidian_cost_ore and self.resources[1] >= blueprint.obsidian_cost_clay:
+            yield State(self.used2(blueprint.obsidian_cost_ore, 1, blueprint.obsidian_cost_clay), self.built(2))
+
+        if self.resources[0] >= blueprint.geode_cost_ore and self.resources[2] >= blueprint.geode_cost_obsidian:
+            yield State(self.used2(blueprint.geode_cost_ore, 2, blueprint.geode_cost_obsidian), self.built(3))
+
     def used(self, index, count):
         assert self.resources[index] >= count
+
         if index == 0:
             return (
                 self.resources[0] - count + self.robots[0],
@@ -80,6 +87,7 @@ class State:
                 self.resources[2] + self.robots[2],
                 self.resources[3] + self.robots[3],
             )
+
         if index == 1:
             return (
                 self.resources[0] + self.robots[0],
@@ -88,19 +96,45 @@ class State:
                 self.resources[3] + self.robots[3],
             )
 
-        raise ValueError('invalid index to use')
+        raise ValueError('invalid index to use ore')
+
+    def used2(self, count, index2, count2):
+        assert self.resources[0] >= count
+        assert self.resources[index2] >= count2
+
+        if index2 == 1:
+            return (
+                self.resources[0] - count + self.robots[0],
+                self.resources[1] - count2 + self.robots[1],
+                self.resources[2] + self.robots[2],
+                self.resources[3] + self.robots[3],
+            )
+
+        if index2 == 2:
+            return (
+                self.resources[0] - count + self.robots[0],
+                self.resources[1] + self.robots[1],
+                self.resources[2] - count2 + self.robots[2],
+                self.resources[3] + self.robots[3],
+            )
+
+        raise ValueError(f'invalid index for 2nd resource: {index2}')
 
     def built(self, index):
         if index == 0:
             return self.robots[0] + 1, self.robots[1], self.robots[2], self.robots[3]
         if index == 1:
             return self.robots[0], self.robots[1] + 1, self.robots[2], self.robots[3]
+        if index == 2:
+            return self.robots[0], self.robots[1], self.robots[2] + 1, self.robots[3]
+        if index == 3:
+            return self.robots[0], self.robots[1], self.robots[2], self.robots[3] + 1
 
         raise ValueError('not implemented yet')
 
     @property
-    def geodes(self):
-        return self.resources[-1]
+    def geodes_plus_robots(self):
+        return self.resources[-1] + self.robots[-1]
 
 
 def compute_max_geodes(blueprint, minutes):
@@ -113,9 +147,8 @@ def compute_max_geodes(blueprint, minutes):
     To find the maximum geodes we can have, we explore reachable states in 24 steps.
     Some states are clearly inferior to others and should not be explored.
     """
-    max_geodes = 0
     q = [State()]
-    for minute in range(minutes):
+    for minute in range(minutes - 1):
         print(minute, len(q), q[0])
         q2 = []
         for s in q:
@@ -128,10 +161,12 @@ def compute_max_geodes(blueprint, minutes):
 
                 q2.append(s2)
 
-            max_geodes = max(max_geodes, s.geodes)
-
         # TODO filter q2, excluding poor choices
         q = q2
+
+    max_geodes = 0
+    for s in q:
+        max_geodes = max(max_geodes, s.geodes_plus_robots)
 
     return max_geodes
 
