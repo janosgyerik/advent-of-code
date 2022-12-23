@@ -9,6 +9,17 @@ def neighbors(*coords):
         yield tuple(copy)
 
 
+def neighbors_all(x, y):
+    yield -1, -1
+    yield -1, 0
+    yield -1, 1
+    yield 1, -1
+    yield 1, 0
+    yield 1, 1
+    yield 0, -1
+    yield 0, 1
+
+
 def manhattan_distance(*pairs):
     halflen = len(pairs) // 2
     return sum(abs(x1 - x2) for x1, x2 in zip(pairs[:halflen], pairs[halflen:]))
