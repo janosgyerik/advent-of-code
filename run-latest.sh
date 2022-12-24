@@ -14,4 +14,9 @@ if [ $# = 0 ]; then
     set -- tmp/input.txt
 fi
 
-python3.11 "$prog" "$@"
+cmd() {
+    echo "+ $@"
+    "$@"
+}
+
+cmd python3.11 "$prog" "$@"
