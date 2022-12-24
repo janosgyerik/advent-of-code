@@ -58,6 +58,9 @@ class Grid:
         copy.extend(padding_top)
         return Grid(copy)
 
+    def copy(self):
+        return Grid([row[:] for row in self.grid])
+
 
 class GridIter:
     def __init__(self, grid):
